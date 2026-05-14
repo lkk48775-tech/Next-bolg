@@ -1,0 +1,173 @@
+import styles from './css.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'css-transition',
+  title: 'CSS 过渡动画',
+  category: 'css'
+}
+
+<div className={styles.content}>
+
+##  CSS 过渡动画
+
+Transition 用来描述样式变化的过程。它能让 hover、展开、位移、透明度变化更自然，而不是突然跳变。
+
+###  Transition 是什么
+
+当元素从一种样式变成另一种样式时，默认会立即完成变化。比如按钮 hover 后背景色立刻改变，卡片 hover 后阴影突然出现。
+
+`transition` 可以让这个变化在一段时间内逐渐完成。
+
+<CodeWindow
+  lang="css"
+  code={`
+.button {
+  background-color: #fff;
+  transition: background-color .2s;
+}
+
+.button:hover {
+  background-color: #e8f8fa;
+}
+`}
+/>
+
+### 基本语法
+
+<CodeWindow
+  lang="css"
+  code={`
+.card {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+`}
+/>
+
+完整结构包括：
+
+| 部分 | 含义 |
+| --- | --- |
+| `transform` | 需要过渡的属性 |
+| `.2s` | 持续时间 |
+| `ease` | 速度曲线 |
+| `delay` | 延迟时间，可选 |
+
+###  适合过渡的属性
+
+不是所有 CSS 属性都适合做动画。性能比较好的属性通常是：
+
+- `transform`
+- `opacity`
+- `filter`
+- `background-color`
+- `box-shadow`
+
+尽量少频繁动画这些属性：
+
+- `width`
+- `height`
+- `top`
+- `left`
+- `margin`
+- `padding`
+
+这些属性可能触发布局重新计算，在复杂页面中会更容易卡顿。
+
+###  常见效果
+
+####  卡片上浮
+
+<CodeWindow
+  lang="css"
+  code={`
+.articleCard {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.articleCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 8px 10px 18px rgba(0, 0, 0, .16);
+}
+`}
+/>
+
+这个效果适合文章卡片、项目卡片和商品卡片。
+
+####  按钮颜色变化
+
+<CodeWindow
+  lang="css"
+  code={`
+.button {
+  background-color: #fff;
+  color: #1d9fae;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.button:hover {
+  background-color: #1d9fae;
+  color: #fff;
+}
+`}
+/>
+
+####  下划线展开
+
+<CodeWindow
+  lang="css"
+  code={`
+.link {
+  position: relative;
+}
+
+.link::after {
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background-color: currentColor;
+  content: '';
+  transition: width .25s ease;
+}
+
+.link:hover::after {
+  width: 100%;
+}
+`}
+/>
+
+这种写法适合导航菜单和文字按钮。
+
+###  速度曲线
+
+`transition-timing-function` 决定动画速度变化。
+
+| 值 | 效果 |
+| --- | --- |
+| `linear` | 匀速 |
+| `ease` | 默认，先快后慢 |
+| `ease-in` | 慢慢开始 |
+| `ease-out` | 慢慢结束 |
+| `ease-in-out` | 开头和结尾都较慢 |
+
+大多数界面动画使用 `.18s` 到 `.3s` 就足够了。时间太长会拖慢操作反馈。
+
+###  和 animation 的区别
+
+| 对比 | transition | animation |
+| --- | --- | --- |
+| 触发方式 | 通常由状态变化触发 |
+| 控制能力 | 简单 |
+| 是否可循环 | 不适合复杂循环 |
+| 常见用途 | hover、展开、显隐 |
+| 复杂关键帧 | 不适合 |
+
+如果只是从 A 状态变到 B 状态，优先使用 `transition`。如果需要多阶段、循环、关键帧动画，再使用 `animation`。
+
+###  小结
+
+Transition 的价值在于让界面反馈更柔和。日常开发中，只要注意动画属性、持续时间和触发状态，就能做出轻量又稳定的交互效果。
+
+</div>

@@ -1,0 +1,218 @@
+.nav {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+    display: flex;
+    /* float: left; */
+    /*主轴从尾部开始排序 */
+   justify-content: flex-end;
+   width:100%;
+   height: 60px;
+   color: white;
+   transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
+/* background-color: pink; */
+li {
+  cursor: pointer;
+}
+@media(min-width:850px){
+ .options{
+     margin-right: 2.7vw;
+   font-size: 16px;
+   display: flex;
+       /* 侧轴上的排序 */
+   align-items: center;
+   position: relative;
+   .transtion {
+    position: absolute;
+    bottom: 0px;
+    width: 0px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--blog-nav-accent, #ffa500);
+    transition: width 0.5s ease;
+   }
+    .icon{
+      margin-right: 6px;
+      width: 20px;
+      height: 20px;
+   }
+ }
+ .login{
+   width: 40px;
+   height: 40px;
+   margin-top: 10px;
+   margin-right: 20px;
+   border-radius: 20px;
+   background-color: rgb(53, 184, 64);
+ }
+ .brief {
+  display: none;
+}
+}
+@media(max-width:850px){
+   .options ,.login{
+    display: none;
+   }
+   .brief {
+    margin-right:9px ;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+   .navIcon {
+    font-size: 35px;
+    color: white;
+  }
+   }
+}
+}
+.nav:hover{
+   background-color: var(--blog-nav-hover-bg, rgba(0, 0, 0, 0.7));
+
+   .options:hover {    
+     color: var(--blog-nav-accent, #ffa500);
+     .transtion{
+       width: 100%;
+     }
+}
+}
+.noHoverLayer:hover {
+  background-color: transparent;
+}
+.scrolledNav {
+  z-index: 1200;
+  background-color: var(--blog-nav-scrolled-bg, rgba(255, 255, 255, .82));
+  backdrop-filter: blur(12px);
+  color: var(--blog-nav-scrolled-color, #111827);
+  box-shadow: var(--blog-nav-shadow, 0 8px 22px rgba(15, 23, 42, .08));
+}
+.hiddenNav {
+  display: none;
+  pointer-events: none;
+}
+
+/* ===== 移动端侧边抽屉 ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  background-color: rgba(0, 0, 0, .5);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+
+.overlayVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1600;
+  display: flex;
+  flex-direction: column;
+  width: 65%;
+  max-width: 320px;
+  height: 100vh;
+  background: linear-gradient(180deg, #0f172a, #1e293b 60%, #0f172a);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, .4);
+  transform: translateX(-100%);
+  transition: transform .35s cubic-bezier(.4, 0, .2, 1);
+  overflow-y: auto;
+}
+
+.drawerOpen {
+  transform: translateX(0);
+}
+
+.drawerHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px 28px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(56, 189, 248, .12), transparent 60%),
+    linear-gradient(180deg, rgba(30, 41, 59, .6), transparent);
+  border-bottom: 1px solid rgba(148, 163, 184, .15);
+}
+
+.drawerAvatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(56, 189, 248, .4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+}
+
+.drawerAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drawerName {
+  margin-top: 14px;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.drawerDesc {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.drawerNav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 14px;
+}
+
+.drawerLink {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  color: #cbd5e1;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color .2s, color .2s, transform .2s;
+}
+
+.drawerLink:hover {
+  background-color: rgba(148, 163, 184, .1);
+  color: #f8fafc;
+  transform: translateX(4px);
+}
+
+.drawerLinkActive {
+  background: linear-gradient(90deg, rgba(56, 189, 248, .15), transparent);
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+.drawerLinkActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 24px;
+  border-radius: 999px;
+  background: #38bdf8;
+}
+
+.drawerIcon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,82 @@
+import styles from './react.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'react-performance',
+  title: '减少不必要渲染',
+  category: 'React'
+}
+
+<div className={styles.content}>
+
+## 减少不必要渲染
+
+> 性能优化要先找到真正的问题，再针对渲染次数、计算成本和列表规模处理。
+
+### 适用场景
+
+- 大列表
+- 复杂计算
+- 子组件频繁更新
+- 滚动卡顿
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| React.memo | props 没变化时跳过子组件渲染。 |
+| useMemo 缓存计算 | 昂贵计算可以用 useMemo 缓存结果。 |
+| useCallback 稳定函数引用 | 传给 memo 子组件的函数可以用 useCallback 缓存。 |
+
+### 分批介绍
+
+#### React.memo
+
+<span>props</span> 没变化时跳过子组件渲染。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+const Item = React.memo(function Item({ title }) {
+  return <li>{title}</li>
+})
+`}
+/>
+
+#### useMemo 缓存计算
+
+昂贵计算可以用 <span>useMemo</span> 缓存结果。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+const filteredList = useMemo(() => {
+  return list.filter((item) => item.title.includes(keyword))
+}, [list, keyword])
+`}
+/>
+
+#### useCallback 稳定函数引用
+
+传给 memo 子组件的函数可以用 <span>useCallback</span> 缓存。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+const onOpen = useCallback((id) => {
+  console.log(id)
+}, [])
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+减少不必要渲染 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

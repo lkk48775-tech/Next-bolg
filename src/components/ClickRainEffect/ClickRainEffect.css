@@ -1,0 +1,24 @@
+.click-rain-dot {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 1;
+  animation: clickRainFall var(--duration) ease-in var(--delay) forwards;
+}
+
+@keyframes clickRainFall {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--x) * 0.4), calc(-50% - 35px)) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.4);
+  }
+}

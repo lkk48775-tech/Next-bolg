@@ -1,0 +1,86 @@
+import styles from './vue.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'vue-<span>reactive</span>',
+  title: '数据驱动视图',
+  category: 'Vue'
+}
+
+<div className={styles.content}>
+
+## 数据驱动视图
+
+> Vue 通过<span>响应式数据</span>驱动视图更新，开发者只需要修改状态，不需要手动操作 DOM。
+
+### 适用场景
+
+- 计数器
+- 表单输入
+- 接口列表
+- 条件展示
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| ref 保存基础值 | ref 适合保存数字、字符串、布尔值等单个状态。 |
+| reactive 保存对象 | reactive 适合保存结构化对象。 |
+| 模板自动更新 | 响应式数据变化后，模板中使用它的地方会自动更新。 |
+
+### 分批介绍
+
+#### ref 保存基础值
+
+<span>ref</span> 适合保存数字、字符串、布尔值等单个状态。
+
+<CodeWindow
+  lang="vue"
+  code={`
+<script setup>
+import { ref } from 'vue'
+
+const count = ref(0)
+</script>
+`}
+/>
+
+#### reactive 保存对象
+
+<span>reactive</span> 适合保存结构化对象。
+
+<CodeWindow
+  lang="vue"
+  code={`
+<script setup>
+import { reactive } from 'vue'
+
+const form = reactive({ username: '', password: '' })
+</script>
+`}
+/>
+
+#### 模板自动更新
+
+<span>响应式数据</span>变化后，模板中使用它的地方会自动更新。
+
+<CodeWindow
+  lang="vue"
+  code={`
+<template>
+  <button @click="count++">{{ count }}</button>
+</template>
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+数据驱动视图 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

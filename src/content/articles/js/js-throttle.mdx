@@ -1,0 +1,103 @@
+import styles from './js.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'js-throttle',
+  title: '认识 JS <span>节流</span>',
+  category: 'JavaScript'
+}
+
+<div className={styles.content}>
+
+## 认识 JS 节流
+
+> <span>节流</span>会限制函数在固定时间内最多执行一次，适合滚动、拖拽和鼠标移动这类高频事件。
+
+### 适用场景
+
+- 滚动时计算吸顶
+- 拖拽时更新坐标
+- 鼠标移动时绘制轨迹
+- 列表滚动时做曝光统计
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 时间戳节流 | 记录上一次执行时间，只有间隔超过设定值时才执行。 |
+| 滚动监听场景 | 滚动事件触发非常频繁，节流可以减少计算次数。 |
+| requestAnimationFrame 节流 | 和渲染相关的高频操作，可以用 requestAnimationFrame 让更新跟随浏览器刷新节奏。 |
+
+### 分批介绍
+
+#### 时间戳节流
+
+记录上一次执行时间，只有间隔超过设定值时才执行。
+
+<CodeWindow
+  lang="js"
+  code={`
+function throttle(fn, interval = 300) {
+  let lastTime = 0
+
+  return function (...args) {
+    const now = Date.now()
+    if (now - lastTime >= interval) {
+      lastTime = now
+      fn.apply(this, args)
+    }
+  }
+}
+`}
+/>
+
+#### 滚动监听场景
+
+滚动事件触发非常频繁，<span>节流</span>可以减少计算次数。
+
+<CodeWindow
+  lang="js"
+  code={`
+const onScroll = throttle(() => {
+  const top = window.scrollY
+  console.log('scroll top:', top)
+}, 200)
+
+window.addEventListener('scroll', onScroll)
+`}
+/>
+
+#### requestAnimationFrame 节流
+
+和渲染相关的高频操作，可以用 requestAnimationFrame 让更新跟随浏览器刷新节奏。
+
+<CodeWindow
+  lang="js"
+  code={`
+function rafThrottle(fn) {
+  let running = false
+
+  return function (...args) {
+    if (running) return
+    running = true
+
+    requestAnimationFrame(() => {
+      fn.apply(this, args)
+      running = false
+    })
+  }
+}
+`}
+/>
+
+### 使用建议
+
+- 节流强调固定频率。
+- 拖拽和滚动更适合节流。
+- 间隔时间要结合业务调试。
+
+### 小结
+
+认识 JS <span>节流</span> 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

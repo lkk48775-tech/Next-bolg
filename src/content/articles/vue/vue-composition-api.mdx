@@ -1,0 +1,89 @@
+import styles from './vue.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'vue-composition-api',
+  title: '按逻辑组织代码',
+  category: 'Vue'
+}
+
+<div className={styles.content}>
+
+## 按逻辑组织代码
+
+> <span>Composition API</span> 可以把同一业务逻辑相关的状态、计算和方法放在一起。
+
+### 适用场景
+
+- 复杂页面
+- 逻辑复用
+- 表单处理
+- 列表筛选
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| ref 声明状态 | ref 在 script 中访问需要 .value。 |
+| computed 派生数据 | computed 适合从已有状态计算新结果。 |
+| 组合函数复用逻辑 | 重复逻辑可以抽成 use 开头的函数。 |
+
+### 分批介绍
+
+#### ref 声明状态
+
+<span>ref</span> 在 script 中访问需要 .value。
+
+<CodeWindow
+  lang="vue"
+  code={`
+<script setup>
+import { ref } from 'vue'
+
+const keyword = ref('')
+</script>
+`}
+/>
+
+#### computed 派生数据
+
+<span>computed</span> 适合从已有状态计算新结果。
+
+<CodeWindow
+  lang="vue"
+  code={`
+<script setup>
+const filteredList = computed(() => {
+  return list.value.filter((item) => item.includes(keyword.value))
+})
+</script>
+`}
+/>
+
+#### 组合函数复用逻辑
+
+重复逻辑可以抽成 use 开头的函数。
+
+<CodeWindow
+  lang="js"
+  code={`
+export function useToggle(defaultValue = false) {
+  const visible = ref(defaultValue)
+  const open = () => (visible.value = true)
+  const close = () => (visible.value = false)
+  return { visible, open, close }
+}
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+按逻辑组织代码 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

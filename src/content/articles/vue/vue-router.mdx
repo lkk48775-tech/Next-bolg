@@ -1,0 +1,82 @@
+import styles from './vue.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'vue-router',
+  title: '单页应用页面切换',
+  category: 'Vue'
+}
+
+<div className={styles.content}>
+
+## 单页应用页面切换
+
+> <span>Vue Router</span> 根据路径渲染对应组件，让单页应用也能拥有多页面导航体验。
+
+### 适用场景
+
+- 首页列表切换
+- 详情页参数
+- 后台菜单
+- 权限拦截
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 配置 routes | 路由表描述路径和组件之间的关系。 |
+| 动态路由参数 | 详情页可以通过参数加载对应数据。 |
+| 导航守卫 | 守卫可以处理登录校验、权限判断和标题设置。 |
+
+### 分批介绍
+
+#### 配置 routes
+
+路由表描述路径和组件之间的关系。
+
+<CodeWindow
+  lang="js"
+  code={`
+const routes = [
+  { path: '/', component: Home },
+  { path: '/articles', component: ArticleList }
+]
+`}
+/>
+
+#### 动态路由参数
+
+详情页可以通过参数加载对应数据。
+
+<CodeWindow
+  lang="js"
+  code={`
+const route = useRoute()
+const slug = route.params.slug
+`}
+/>
+
+#### 导航守卫
+
+守卫可以处理登录校验、权限判断和标题设置。
+
+<CodeWindow
+  lang="js"
+  code={`
+router.beforeEach((to) => {
+  document.title = to.meta.title || 'Blog'
+})
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+单页应用页面切换 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

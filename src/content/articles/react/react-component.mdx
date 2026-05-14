@@ -1,0 +1,92 @@
+import styles from './react.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'react-component',
+  title: '把页面拆成模块',
+  category: 'React'
+}
+
+<div className={styles.content}>
+
+## 把页面拆成模块
+
+> <span>组件化</span>把页面拆成可复用、可组合的小单元。好的组件应该职责清楚、输入明确、输出可控。
+
+### 适用场景
+
+- 卡片组件
+- 弹窗组件
+- 列表项组件
+- 页面布局拆分
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| props 传递数据 | 父组件通过 props 把数据传给子组件。 |
+| 事件回调通知父组件 | 子组件不要直接修改父组件状态，而是通过回调通知父组件。 |
+| children 组合内容 | children 适合做布局组件，让父组件决定内部内容。 |
+
+### 分批介绍
+
+#### props 传递数据
+
+父组件通过 <span>props</span> 把数据传给子组件。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+function ArticleCard({ title, desc }) {
+  return (
+    <article>
+      <h3>{title}</h3>
+      <p>{desc}</p>
+    </article>
+  )
+}
+`}
+/>
+
+#### 事件回调通知父组件
+
+子组件不要直接修改父组件状态，而是通过回调通知父组件。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+function ArticleCard({ article, onOpen }) {
+  return <button onClick={() => onOpen(article.id)}>{article.title}</button>
+}
+`}
+/>
+
+#### children 组合内容
+
+<span>children</span> 适合做布局组件，让父组件决定内部内容。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+function Panel({ title, children }) {
+  return (
+    <section>
+      <h2>{title}</h2>
+      {children}
+    </section>
+  )
+}
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+把页面拆成模块 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

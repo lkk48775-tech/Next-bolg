@@ -1,0 +1,92 @@
+import styles from './js.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'js-<span>prototype</span>',
+  title: '对象继承的基础',
+  category: 'JavaScript'
+}
+
+<div className={styles.content}>
+
+## 对象继承的基础
+
+> <span>原型</span>是 JavaScript 对象共享属性和方法的机制，也是 class 背后的基础。
+
+### 适用场景
+
+- 理解 class
+- 共享实例方法
+- 判断属性来源
+- 阅读构造函数风格代码
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 构造函数创建对象 | 构造函数通常用来初始化实例自己的属性。 |
+| prototype 共享方法 | 放在 prototype 上的方法会被实例共享，不需要每次 new 都重新创建函数。 |
+| class 写法 | class 是更现代的写法，但底层仍然基于原型机制。 |
+
+### 分批介绍
+
+#### 构造函数创建对象
+
+构造函数通常用来初始化实例自己的属性。
+
+<CodeWindow
+  lang="js"
+  code={`
+function User(name) {
+  this.name = name
+}
+
+const user = new User('Sakura')
+`}
+/>
+
+#### prototype 共享方法
+
+放在 <span>prototype</span> 上的方法会被实例共享，不需要每次 new 都重新创建函数。
+
+<CodeWindow
+  lang="js"
+  code={`
+User.prototype.sayHi = function () {
+  return 'Hi, ' + this.name
+}
+
+user.sayHi()
+`}
+/>
+
+#### class 写法
+
+class 是更现代的写法，但底层仍然基于<span>原型</span>机制。
+
+<CodeWindow
+  lang="js"
+  code={`
+class Article {
+  constructor(title) {
+    this.title = title
+  }
+
+  read() {
+    return this.title
+  }
+}
+`}
+/>
+
+### 使用建议
+
+- 不要随意修改内置对象原型。
+- 实例属性会遮蔽原型同名属性。
+- 原型链不要设计得太复杂。
+
+### 小结
+
+对象继承的基础 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

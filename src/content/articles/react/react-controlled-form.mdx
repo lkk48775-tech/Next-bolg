@@ -1,0 +1,87 @@
+import styles from './react.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'react-controlled-form',
+  title: '表单由状态驱动',
+  category: 'React'
+}
+
+<div className={styles.content}>
+
+## 表单由状态驱动
+
+> <span>受控表单</span>让输入框的值由 React 状态控制，便于校验、联动和重置。
+
+### 适用场景
+
+- 登录表单
+- 搜索条件
+- 编辑资料
+- 发布文章
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| value 和 onChange | 输入框显示来自状态，输入时再更新状态。 |
+| 多个字段统一管理 | 字段多时可以用对象保存表单状态。 |
+| 提交前校验 | 提交时集中判断字段是否合法。 |
+
+### 分批介绍
+
+#### value 和 onChange
+
+输入框显示来自状态，输入时再更新状态。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+const [name, setName] = useState('')
+
+<input value={name} onChange={(e) => setName(e.target.value)} />
+`}
+/>
+
+#### 多个字段统一管理
+
+字段多时可以用对象保存表单状态。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+const [form, setForm] = useState({ username: '', password: '' })
+
+function update(key, value) {
+  setForm((prev) => ({ ...prev, [key]: value }))
+}
+`}
+/>
+
+#### 提交前校验
+
+提交时集中判断字段是否合法。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+function submit() {
+  if (!form.username) {
+    setError('请输入用户名')
+    return
+  }
+}
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+表单由状态驱动 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

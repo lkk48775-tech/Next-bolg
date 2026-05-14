@@ -1,0 +1,83 @@
+.footer {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 220px;
+  /* margin-top: 32px; */
+  overflow: hidden;
+  background:
+    var(--blog-footer-overlay, linear-gradient(180deg, rgba(0, 95, 118, .58), rgba(0, 73, 92, .72))),
+    url('/1-lite.webp') center 58% / cover no-repeat;
+  color: #fff;
+}
+
+.footer::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(255, 255, 255, .18), transparent 28%),
+    linear-gradient(90deg, rgba(0, 0, 0, .16), transparent 24%, transparent 76%, rgba(0, 0, 0, .16));
+  content: '';
+}
+
+.footer::after {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(12, 92, 112, .16);
+  backdrop-filter: saturate(1.06);
+  content: '';
+}
+
+.noImage {
+  background:
+    linear-gradient(135deg, rgb(15, 23, 42), rgb(14, 116, 144) 58%, rgb(15, 118, 110));
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: min(1040px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 30px 0 28px;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+}
+
+.inner p {
+  margin: 0;
+  color: rgba(255, 255, 255, .94);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 2.2;
+}
+
+.poem {
+  margin-bottom: 4px !important;
+  color: #fff !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+}
+
+@media (max-width: 640px) {
+  .footer {
+    min-height: 260px;
+    margin-top: 28px;
+    background-position: center bottom;
+  }
+
+  .inner {
+    width: min(100% - 28px, 1040px);
+    padding: 26px 0;
+  }
+
+  .inner p {
+    font-size: 12px;
+    line-height: 2;
+  }
+
+  .poem {
+    font-size: 14px !important;
+  }
+}

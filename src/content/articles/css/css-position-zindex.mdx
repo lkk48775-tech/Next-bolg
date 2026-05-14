@@ -1,0 +1,194 @@
+import styles from './css.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'css-position-zindex',
+  title: '定位与层级',
+  category: 'css'
+}
+
+<div className={styles.content}>
+
+## 定位与层级
+
+`position` 决定元素如何摆放，`z-index` 决定元素如何覆盖。弹窗、提示框、固定按钮、吸顶导航都离不开这两个概念。
+
+### position 的常见取值
+
+| 值 | 说明 |
+| --- | --- |
+| `static` | 默认值，元素在普通文档流中 |
+| `relative` | 相对自身原位置偏移 |
+| `absolute` | 相对最近的定位祖先定位 |
+| `fixed` | 相对浏览器视口定位 |
+| `sticky` | 滚动到指定位置后吸附 |
+
+### relative
+
+`relative` 不会让元素脱离文档流。它常用来作为 `absolute` 子元素的定位上下文。
+
+<CodeWindow
+  lang="css"
+  code={`
+.card {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+`}
+/>
+
+这里 `.badge` 会相对 `.card` 定位。
+
+### absolute
+
+`absolute` 会让元素脱离普通文档流。它会寻找最近的非 `static` 祖先作为定位参考。
+
+<CodeWindow
+  lang="css"
+  code={`
+.tooltipWrap {
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+}
+`}
+/>
+
+这个写法适合 tooltip、下拉菜单和卡片浮层。
+
+### fixed
+
+`fixed` 相对视口定位，不随页面内容位置变化。
+
+<CodeWindow
+  lang="css"
+  code={`
+.backTop {
+  position: fixed;
+  right: 16px;
+  bottom: 50px;
+  z-index: 999;
+}
+`}
+/>
+
+右下角返回顶部按钮、悬浮工具栏通常会用 `fixed`。
+
+###  sticky
+
+`sticky` 在普通位置和固定位置之间切换。
+
+<CodeWindow
+  lang="css"
+  code={`
+.tabs {
+  position: sticky;
+  top: 64px;
+  z-index: 20;
+}
+`}
+/>
+
+它常用于吸顶标签栏、目录导航等。
+
+###  z-index 的作用
+
+`z-index` 控制元素在层叠方向上的顺序。值越大，越靠上。
+
+<CodeWindow
+  lang="css"
+  code={`
+.modalMask {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.modal {
+  position: fixed;
+  z-index: 1001;
+}
+`}
+/>
+
+需要注意：`z-index` 通常只对定位元素有效，也就是元素需要设置 `position` 为 `relative`、`absolute`、`fixed` 或 `sticky`。
+
+###  层叠上下文
+
+有些属性会创建新的层叠上下文。创建后，子元素的 `z-index` 只能在这个上下文内部比较。
+
+常见会创建层叠上下文的属性：
+
+- `position` + `z-index`
+- `transform`
+- `opacity` 小于 `1`
+- `filter`
+- `isolation: isolate`
+- `will-change`
+
+这也是为什么有时候写了很大的 `z-index`，元素仍然盖不上去。问题可能不在数值，而在父元素创建了新的层叠上下文。
+
+###  常见布局示例
+
+####  Tooltip 浮层
+
+<CodeWindow
+  lang="css"
+  code={`
+.descWrap {
+  position: relative;
+}
+
+.descWrap::after {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 10px);
+  z-index: 100;
+  width: min(320px, calc(100vw - 64px));
+  padding: 12px 14px;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 6px 8px 18px rgba(0, 0, 0, .14);
+  content: attr(data-full);
+}
+`}
+/>
+
+####  全屏遮罩
+
+<CodeWindow
+  lang="css"
+  code={`
+.mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, .45);
+}
+`}
+/>
+
+`inset: 0` 等价于 `top: 0; right: 0; bottom: 0; left: 0;`。
+
+###  使用建议
+
+- 不要随意写特别大的 `z-index`
+- 先规划层级，比如 Header 是 100，Popover 是 500，Modal 是 1000
+- 遇到覆盖失败时，检查父元素是否有 `transform`、`opacity`、`filter`
+- 浮层要限制宽度，避免小屏幕横向溢出
+
+###  小结
+
+定位负责“元素放在哪里”，层级负责“谁盖住谁”。理解定位上下文和层叠上下文后，绝大多数浮层、弹窗、固定按钮问题都能更快定位。
+
+</div>

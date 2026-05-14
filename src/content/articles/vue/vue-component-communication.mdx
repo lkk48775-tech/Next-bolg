@@ -1,0 +1,100 @@
+import styles from './vue.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'vue-component-communication',
+  title: '组件之间传递信息',
+  category: 'Vue'
+}
+
+<div className={styles.content}>
+
+## 组件之间传递信息
+
+> 组件通信需要根据组件关系选择方式：父子用 <span>props</span> 和 emit，跨层级用 provide/inject，全局共享用 Pinia。
+
+### 适用场景
+
+- 父子组件
+- 多层嵌套组件
+- 跨页面共享状态
+- 插槽内容定制
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 父子通信：props 和 emit | 父组件传数据给子组件，子组件通过事件通知父组件。 |
+| 跨层通信：provide 和 inject | 多层嵌套组件共享配置时，可以避免层层传 props。 |
+| 全局共享：Pinia | 用户信息、权限和购物车这类跨页面状态更适合放到 Pinia。 |
+| 插槽通信：slot | 父组件决定内容，子组件负责布局。 |
+
+### 分批介绍
+
+#### 父子通信：props 和 emit
+
+父组件传数据给子组件，子组件通过事件通知父组件。
+
+<CodeWindow
+  lang="vue"
+  code={`
+<script setup>
+defineProps({ title: String })
+const emit = defineEmits(['select'])
+</script>
+
+<template>
+  <button @click="emit('select')">{{ title }}</button>
+</template>
+`}
+/>
+
+#### 跨层通信：provide 和 inject
+
+多层嵌套组件共享配置时，可以避免层层传 <span>props</span>。
+
+<CodeWindow
+  lang="js"
+  code={`
+provide('theme', 'dark')
+
+const theme = inject('theme')
+`}
+/>
+
+#### 全局共享：Pinia
+
+用户信息、权限和购物车这类跨页面状态更适合放到 <span>Pinia</span>。
+
+<CodeWindow
+  lang="js"
+  code={`
+const userStore = useUserStore()
+console.log(userStore.info)
+`}
+/>
+
+#### 插槽通信：slot
+
+父组件决定内容，子组件负责布局。
+
+<CodeWindow
+  lang="vue"
+  code={`
+<Card>
+  <template #title>文章标题</template>
+</Card>
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+组件之间传递信息 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

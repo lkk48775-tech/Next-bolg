@@ -1,0 +1,100 @@
+import styles from './js.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'js-array-methods',
+  title: '常用数据处理',
+  category: 'JavaScript'
+}
+
+<div className={styles.content}>
+
+## 常用数据处理
+
+> 数组方法常用于把接口数据转换成页面需要的数据结构。不同方法解决的问题不同，选对方法会让代码更清晰。
+
+### 适用场景
+
+- 接口数据映射成卡片
+- 过滤不可见数据
+- 计算总价
+- 按分类分组
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| map 转换结构 | map 适合把原数组中的每一项转换成另一种结构，常用于生成组件需要的字段。 |
+| filter 筛选数据 | filter 用来保留满足条件的数据，例如只展示已发布文章。 |
+| reduce 聚合结果 | reduce 可以把数组变成一个值或对象，例如求和、分组、统计数量。 |
+| 按分类分组 | 列表页经常需要把数据按分类整理成对象。 |
+
+### 分批介绍
+
+#### map 转换结构
+
+<span>map</span> 适合把原数组中的每一项转换成另一种结构，常用于生成组件需要的字段。
+
+<CodeWindow
+  lang="js"
+  code={`
+const options = articles.map((item) => ({
+  label: item.title,
+  value: item.slug
+}))
+`}
+/>
+
+#### filter 筛选数据
+
+<span>filter</span> 用来保留满足条件的数据，例如只展示已发布文章。
+
+<CodeWindow
+  lang="js"
+  code={`
+const visibleArticles = articles.filter((item) => {
+  return item.status === 'published'
+})
+`}
+/>
+
+#### reduce 聚合结果
+
+<span>reduce</span> 可以把数组变成一个值或对象，例如求和、分组、统计数量。
+
+<CodeWindow
+  lang="js"
+  code={`
+const total = cartList.reduce((sum, item) => {
+  return sum + item.price * item.count
+}, 0)
+`}
+/>
+
+#### 按分类分组
+
+列表页经常需要把数据按分类整理成对象。
+
+<CodeWindow
+  lang="js"
+  code={`
+const groupMap = articles.reduce((map, item) => {
+  const key = item.category
+  map[key] = map[key] || []
+  map[key].push(item)
+  return map
+}, {})
+`}
+/>
+
+### 使用建议
+
+- sort 和 reverse 会修改原数组。
+- 链式调用太长时拆成中间变量。
+- 大列表要注意重复遍历成本。
+
+### 小结
+
+常用数据处理 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

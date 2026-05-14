@@ -1,0 +1,23 @@
+.click-sakura-petal {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  object-fit: contain;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6) rotate(var(--rotate-start));
+  filter:
+    drop-shadow(0 0 4px rgba(255, 120, 180, 0.75))
+    drop-shadow(0 0 8px rgba(255, 190, 220, 0.45));
+  animation: clickSakuraFall var(--duration) linear var(--delay) forwards;
+}
+
+@keyframes clickSakuraFall {
+  0% {
+    opacity: var(--opacity);
+    transform: translate(-50%, -50%) scale(1) rotate(var(--rotate-start));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.45) rotate(var(--rotate-end));
+  }
+}

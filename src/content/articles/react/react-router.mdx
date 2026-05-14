@@ -1,0 +1,89 @@
+import styles from './react.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'react-router',
+  title: 'React 页面组织',
+  category: 'React'
+}
+
+<div className={styles.content}>
+
+## React 页面组织
+
+> <span>React Router</span> 负责根据地址渲染对应页面，也能处理嵌套路由和动态参数。
+
+### 适用场景
+
+- 首页和列表页切换
+- 详情页动态参数
+- 后台嵌套路由
+- 布局组件复用
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 基础路由配置 | path 描述地址，element 描述要渲染的组件。 |
+| 动态参数 | 详情页常用动态参数加载不同内容。 |
+| 嵌套路由 | 父布局通过 Outlet 渲染子路由。 |
+
+### 分批介绍
+
+#### 基础路由配置
+
+path 描述地址，element 描述要渲染的组件。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+const routes = [
+  { path: '/', element: <Home /> },
+  { path: '/articles', element: <ArticleList /> }
+]
+`}
+/>
+
+#### 动态参数
+
+详情页常用<span>动态参数</span>加载不同内容。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+function ArticleDetail() {
+  const { slug } = useParams()
+  return <div>{slug}</div>
+}
+`}
+/>
+
+#### 嵌套路由
+
+父布局通过 Outlet 渲染子路由。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+function BlogLayout() {
+  return (
+    <>
+      <Header />
+      <Outlet />
+    </>
+  )
+}
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+React 页面组织 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

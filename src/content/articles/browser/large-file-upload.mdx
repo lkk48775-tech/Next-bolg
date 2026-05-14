@@ -1,0 +1,46 @@
+export const articleMeta = {
+  slug: 'large-file-upload',
+  title: '大文件上传概览',
+  category: 'Browser API'
+}
+
+# 大文件上传概览
+
+> 大文件上传通常会围绕切片、并发、断点续传和上传进度展开。它把一个庞大的文件拆成更容易管理的小片段，让上传过程更稳定，也更容易在网络波动后恢复。
+
+## 适用场景
+
+- 网盘文件上传
+- 视频素材上传
+- 后台批量导入大文件
+
+## 核心思路
+
+使用 Blob.slice 将文件切成多个小块，逐个或并发上传。服务端记录已上传分片，前端断点恢复时跳过已有分片。
+
+## 实现步骤
+
+- 先明确数据来源、交互入口和最终要展示的状态。
+- 再把逻辑拆成可复用函数或组件，避免把所有代码堆在页面里。
+- 最后补充边界处理，例如空数据、加载中、异常状态和重复触发。
+
+## 示例代码
+
+```js
+function createChunks(file, size = 5 * 1024 * 1024) {
+  const chunks = []
+  let start = 0
+
+  while (start < file.size) {
+    chunks.push(file.slice(start, start + size))
+    start += size
+  }
+
+  return chunks
+}
+```
+
+## 注意点
+
+- 需要服务端配合合并分片。
+- 并发上传要限制数量，避免占满网络连接。

@@ -1,0 +1,39 @@
+export const articleMeta = {
+  slug: 'file-md5',
+  title: '文件 MD5 值计算',
+  category: 'Browser API'
+}
+
+# 文件 MD5 值计算
+
+> MD5 值可以用来标识文件内容，常见于秒传判断、完整性校验和重复文件识别。前端计算 MD5 时通常会结合文件读取、切片处理和进度反馈。
+
+## 适用场景
+
+- 文件秒传判断
+- 上传前完整性校验
+- 重复文件识别
+
+## 核心思路
+
+读取文件内容并计算哈希值。大文件通常按切片逐步读取，避免一次性读取造成页面卡顿。
+
+## 实现步骤
+
+- 先明确数据来源、交互入口和最终要展示的状态。
+- 再把逻辑拆成可复用函数或组件，避免把所有代码堆在页面里。
+- 最后补充边界处理，例如空数据、加载中、异常状态和重复触发。
+
+## 示例代码
+
+```js
+async function readChunk(file, start, size) {
+  const chunk = file.slice(start, start + size)
+  return await chunk.arrayBuffer()
+}
+```
+
+## 注意点
+
+- 真实 MD5 计算通常会引入 spark-md5 等库。
+- 大文件计算建议放到 Web Worker 中执行。

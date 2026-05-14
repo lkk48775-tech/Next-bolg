@@ -1,0 +1,80 @@
+import styles from './react.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'virtual-list',
+  title: '<span>虚拟列表</span>的思路',
+  category: 'React'
+}
+
+<div className={styles.content}>
+
+## 虚拟列表的思路
+
+> <span>虚拟列表</span>只渲染可视区域附近的数据，用来解决大量 DOM 节点造成的卡顿。
+
+### 适用场景
+
+- 聊天记录
+- 大表格
+- 长列表
+- 搜索结果
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 计算可视范围 | 根据 scrollTop、容器高度和每项高度计算要渲染的范围。 |
+| 截取可见数据 | 只渲染可见范围附近的数据。 |
+| 撑开滚动高度 | 用总高度保持滚动条长度正确。 |
+
+### 分批介绍
+
+#### 计算可视范围
+
+根据 scrollTop、容器高度和每项高度计算要渲染的范围。
+
+<CodeWindow
+  lang="js"
+  code={`
+const start = Math.floor(scrollTop / itemHeight)
+const count = Math.ceil(containerHeight / itemHeight)
+const end = start + count
+`}
+/>
+
+#### 截取可见数据
+
+只渲染可见范围附近的数据。
+
+<CodeWindow
+  lang="js"
+  code={`
+const visibleList = list.slice(start, end + 2)
+`}
+/>
+
+#### 撑开滚动高度
+
+用总高度保持滚动条长度正确。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+<div style={{ height: list.length * itemHeight }}>
+  {visibleList.map(renderItem)}
+</div>
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+<span>虚拟列表</span>的思路 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

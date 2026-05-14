@@ -1,0 +1,211 @@
+import styles from './css.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'css-responsive',
+  title: '响应式布局',
+  category: 'css'
+}
+
+<div className={styles.content}>
+
+##  响应式布局
+
+响应式布局的目标不是让页面在每个屏幕上完全一样，而是让内容在不同设备上都清晰、稳定、易操作。
+
+###  为什么需要响应式
+
+用户可能从不同设备访问同一个页面：
+
+- 大屏桌面显示器
+- 笔记本
+- 平板
+- 手机
+
+如果页面只按一种宽度设计，在小屏幕上就容易出现横向滚动、文字挤压、按钮太小、图片溢出等问题。
+
+响应式布局要解决的是这些问题：
+
+| 问题 | 处理方向 |
+| --- | --- |
+| 内容太宽 | 限制最大宽度，允许换行 |
+| 列数太多 | 随屏幕变少 |
+| 图片溢出 | 设置最大宽度 |
+| 字号不协调 | 使用稳定的字号层级 |
+| 间距太大 | 小屏减少 padding 和 gap |
+
+###  常见布局策略
+
+####  1. 容器宽度使用 max-width
+
+<CodeWindow
+  lang="css"
+  code={`
+.page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+`}
+/>
+
+这段代码的意思是：
+
+- 页面最大宽度是 `1180px`
+- 小屏时左右保留 `20px` 空白
+- 整体水平居中
+
+这比固定写 `width: 1180px` 更安全。
+
+####  2. 图片自适应
+
+<CodeWindow
+  lang="css"
+  code={`
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+`}
+/>
+
+这样图片不会超过父容器宽度，也能保持比例。
+
+####  3. 网格列数随屏幕变化
+
+<CodeWindow
+  lang="css"
+  code={`
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 590px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+`}
+/>
+
+这种写法非常适合文章卡片、商品列表和图片列表。
+
+###  媒体查询
+
+媒体查询可以在特定屏幕宽度下覆盖样式。
+
+<CodeWindow
+  lang="css"
+  code={`
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+}
+`}
+/>
+
+常见断点可以这样安排：
+
+| 宽度 | 常见设备 |
+| --- | --- |
+| `1200px` | 小桌面 |
+| `1024px` | 平板横屏 |
+| `768px` | 平板竖屏 |
+| `590px` | 大多数手机 |
+| `480px` | 小屏手机 |
+
+断点不是越多越好。好的响应式布局通常先依靠弹性布局自然适配，再在必要宽度点做调整。
+
+###  clamp 的使用
+
+`clamp` 可以给一个值设置最小值、理想值和最大值。
+
+<CodeWindow
+  lang="css"
+  code={`
+.hero {
+  height: clamp(240px, 38vw, 426px);
+}
+
+.title {
+  font-size: clamp(24px, 4vw, 44px);
+}
+`}
+/>
+
+它适合处理高度、字号、间距等需要轻微随屏幕变化的值。
+
+###  防止横向溢出
+
+横向溢出通常来自：
+
+- 固定宽度元素
+- 过长文本
+- 绝对定位浮层
+- 图片或代码块没有限制宽度
+
+常用处理方式：
+
+<CodeWindow
+  lang="css"
+  code={`
+html,
+body {
+  overflow-x: hidden;
+}
+
+.content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+`}
+/>
+
+对于代码块：
+
+<CodeWindow
+  lang="css"
+  code={`
+pre {
+  overflow-x: auto;
+}
+`}
+/>
+
+### 小屏交互细节
+
+小屏幕不仅是变窄，还会影响交互方式。鼠标 hover 在手机上并不可靠，所以 tooltip、悬浮预览、复杂下拉菜单都要额外处理。
+
+例如文章卡片浮层可以在小屏时向页面中间展开，避免撑出屏幕：
+
+<CodeWindow
+  lang="css"
+  code={`
+@media (max-width: 590px) {
+  .tooltip {
+    left: 50%;
+    width: min(300px, calc(100vw - 48px));
+    transform: translateX(-50%);
+  }
+}
+`}
+/>
+
+###  小结
+
+响应式布局的重点是让内容在不同宽度下保持可读、可点、可浏览。优先使用弹性宽度、Grid/Flex、`max-width`、`minmax` 和少量关键断点，就能覆盖大多数页面场景。
+
+</div>

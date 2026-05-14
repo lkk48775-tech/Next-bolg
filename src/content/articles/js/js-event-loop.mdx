@@ -1,0 +1,91 @@
+import styles from './js.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'js-event-loop',
+  title: '理解异步执行顺序',
+  category: 'JavaScript'
+}
+
+<div className={styles.content}>
+
+## 理解异步执行顺序
+
+> <span>事件循环</span>决定同步代码、微任务和宏任务的执行顺序，是理解 JavaScript 异步行为的关键。
+
+### 适用场景
+
+- 分析 Promise 和 setTimeout 顺序
+- 理解页面更新时机
+- 排查异步状态问题
+- 优化长任务卡顿
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 同步代码先执行 | 调用栈中的同步代码会先完整执行完，异步回调不会打断当前同步任务。 |
+| 微任务先于宏任务 | Promise.then 属于微任务，setTimeout 属于宏任务。同步任务结束后，会先清空微任务。 |
+| 长任务会阻塞页面 | 如果同步代码执行太久，浏览器无法及时响应点击、滚动和渲染。 |
+
+### 分批介绍
+
+#### 同步代码先执行
+
+调用栈中的同步代码会先完整执行完，异步回调不会打断当前同步任务。
+
+<CodeWindow
+  lang="js"
+  code={`
+console.log('start')
+console.log('end')
+`}
+/>
+
+#### 微任务先于宏任务
+
+Promise.then 属于<span>微任务</span>，setTimeout 属于宏任务。同步任务结束后，会先清空微任务。
+
+<CodeWindow
+  lang="js"
+  code={`
+setTimeout(() => {
+  console.log('timeout')
+})
+
+Promise.resolve().then(() => {
+  console.log('promise')
+})
+
+console.log('sync')
+`}
+/>
+
+#### 长任务会阻塞页面
+
+如果同步代码执行太久，浏览器无法及时响应点击、滚动和渲染。
+
+<CodeWindow
+  lang="js"
+  code={`
+const start = Date.now()
+
+while (Date.now() - start < 1000) {
+  // 页面会被阻塞 1 秒
+}
+
+console.log('finished')
+`}
+/>
+
+### 使用建议
+
+- 同步任务先执行完。
+- 微任务会在下一轮宏任务前清空。
+- 耗时任务可以拆分执行。
+
+### 小结
+
+理解异步执行顺序 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

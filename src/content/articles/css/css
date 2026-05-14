@@ -1,0 +1,172 @@
+export const articleMeta = {
+  slug: 'css-grid',
+  title: 'Grid 网格布局',
+  category: 'css'
+}
+
+# Grid 网格布局
+
+> Grid 是 CSS 中用于二维布局的强大方案。它可以同时控制行和列，非常适合卡片列表、仪表盘、相册、后台面板等结构。
+
+## Grid 适合什么场景
+
+如果页面结构不是简单的一行或一列，而是需要明确的列数、行距、卡片排列和区域划分，就很适合使用 Grid。
+
+常见场景：
+
+- 文章卡片列表
+- 图片宫格
+- 后台统计面板
+- 商品列表
+- 页面主体区域分栏
+- 左侧菜单 + 右侧内容布局
+
+## 基础结构
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+```
+
+这段代码表示：
+
+- 父元素启用 Grid
+- 子元素分成三列
+- 每列占据相同宽度
+- 每个格子之间间距为 `16px`
+
+## 常用属性
+
+### grid-template-columns
+
+定义列的结构。
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr;
+}
+```
+
+也可以使用 `repeat` 简化写法：
+
+```css
+.grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+```
+
+### gap
+
+控制行和列之间的间距。
+
+```css
+.grid {
+  gap: 20px;
+}
+```
+
+也可以分别设置：
+
+```css
+.grid {
+  row-gap: 24px;
+  column-gap: 16px;
+}
+```
+
+### minmax
+
+`minmax` 可以让列宽既有最小值，又能自动伸展。
+
+```css
+.articleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+```
+
+`minmax(0, 1fr)` 在响应式布局中很常见，它能避免内容过长时把网格撑破。
+
+## 响应式卡片网格
+
+```css
+.articleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 1024px) {
+  .articleGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 590px) {
+  .articleGrid {
+    grid-template-columns: 1fr;
+  }
+}
+```
+
+这个结构在博客首页很实用：
+
+| 屏幕宽度 | 列数 | 
+| --- | --- |
+| 桌面端 | 3 列 |
+| 平板或小屏电脑 | 2 列 |
+| 手机 | 1 列 |
+
+## auto-fit 和 auto-fill
+
+如果不想写太多断点，可以让 Grid 自动计算列数。
+
+```css
+.autoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+```
+
+这表示：每个卡片最小宽度是 `220px`，空间足够时自动增加列数，空间不足时自动换行。
+
+## 区域布局
+
+Grid 还可以给页面划分命名区域。
+
+```css
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-areas:
+    "aside main";
+  gap: 24px;
+}
+
+.aside {
+  grid-area: aside;
+}
+
+.main {
+  grid-area: main;
+}
+```
+
+这种方式很适合后台页面或文档页。
+
+## 使用建议
+
+- 卡片列表优先考虑 Grid
+- 简单的图标文字对齐不要用 Grid，Flex 更轻
+- 做响应式网格时，优先使用 `minmax(0, 1fr)`
+- 如果列数不固定，可以尝试 `auto-fit`
+
+## 小结
+
+Grid 的核心是“把空间切成行和列”。当你需要控制二维结构时，它比 Flex 更直接，也能让布局规则更清晰。

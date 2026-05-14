@@ -1,0 +1,83 @@
+import styles from './react.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'dynamic-breadcrumb',
+  title: '<span>动态面包屑</span>目录',
+  category: 'React'
+}
+
+<div className={styles.content}>
+
+## 动态面包屑目录
+
+> 面包屑用于展示当前页面所在层级，让用户知道自己在哪里，也能快速返回上级。
+
+### 适用场景
+
+- 后台管理
+- 文章详情
+- 多级菜单
+- 动态路由
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 配置面包屑数据 | 可以从路由配置或菜单配置生成面包屑。 |
+| 渲染面包屑 | 根据匹配结果渲染链接列表。 |
+| 详情页动态标题 | 详情页标题可以从文章数据里拿。 |
+
+### 分批介绍
+
+#### 配置面包屑数据
+
+可以从路由配置或菜单配置生成面包屑。
+
+<CodeWindow
+  lang="js"
+  code={`
+const menus = [
+  { path: '/', title: '首页' },
+  { path: '/articles', title: '文章' }
+]
+`}
+/>
+
+#### 渲染面包屑
+
+根据匹配结果渲染链接列表。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+function Breadcrumb({ items }) {
+  return items.map((item) => (
+    <Link key={item.path} to={item.path}>{item.title}</Link>
+  ))
+}
+`}
+/>
+
+#### 详情页动态标题
+
+详情页标题可以从文章数据里拿。
+
+<CodeWindow
+  lang="jsx"
+  code={`
+const title = articleInfo?.title || '文章详情'
+`}
+/>
+
+### 使用建议
+
+- 先把数据来源、状态归属和交互入口写清楚，再考虑抽象。
+- 示例代码只保留核心写法，真实业务里还要补充 loading、error、empty 等状态。
+- 如果一种写法让代码更绕，优先回到更直观、更容易维护的实现方式。
+
+### 小结
+
+<span>动态面包屑</span>目录 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

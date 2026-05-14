@@ -1,0 +1,181 @@
+import styles from './css.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'css-grid',
+  title: 'Grid 网格布局',
+  category: 'css'
+}
+
+<div className={styles.content}>
+## Grid 网格布局
+ <span>Grid 是 CSS 中用于二维布局的强大方案。</span>它可以同时控制行和列，非常适合卡片列表、仪表盘、相册、后台面板等结构。
+
+### Grid 适合场景
+
+如果页面结构不是简单的一行或一列，而是需要明确的列数、行距、卡片排列和区域划分，就很适合使用 Grid。
+
+例如：
+- 文章卡片列表
+
+- 图片宫格
+
+- 后台统计面板
+
+- 商品列表
+
+- 页面主体区域分栏
+
+- 左侧菜单 + 右侧内容布局
+
+### 基础解构
+下面代码表示：
+
+<ul>
+1\. 父元素启用 Grid
+
+2\. 子元素分成三列
+
+3\. 每列占据相同宽度
+
+4\. 每个格子之间间距为`16px`
+</ul>
+<CodeWindow
+  lang="css"
+  code={`
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+`}
+/>
+
+### 常用属性
+<span>常用属性：grid-template-columns，gap，minmax等。</span>
+#### grid-template-columns
+定义列的结构。
+<CodeWindow
+  lang="css"
+  code={`
+.grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr;
+}
+ // 也可以'repeat' 简化写法：
+  .grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+`}
+/>
+
+#### gap
+控制行和列之间的间距。
+<CodeWindow
+  lang="css"
+  code={`
+.grid {
+  gap: 20px;
+}
+//也可以分别设置：
+.grid {
+  row-gap: 24px;
+  column-gap: 16px;
+}
+`}
+/>
+#### minmax
+`minmax` 可以让列宽既有最小值，又能自动伸展。
+
+<CodeWindow
+  lang="css"
+  code={`
+  //minmax(0, 1fr) 在响应式布局中很常见，它能避免内容过长时把网格撑破。
+.articleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+`}
+/>
+###  响应式卡片网格
+这个结构在博客首页很实用：
+
+
+| 屏幕宽度 | 列数 |
+| --- | --- |
+| 桌面端 | 3 列 |
+| 平板或小屏电脑 | 2 列 |
+| 手机 | 1 列 |
+<CodeWindow
+  lang="css"
+  code={`
+  .articleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 1024px) {
+  .articleGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 590px) {
+  .articleGrid {
+    grid-template-columns: 1fr;
+  }
+}
+`}
+/>
+
+### auto-fit 和 auto-fill
+如果不想写太多断点，可以让 <span>Grid 自动计算列数</span>。
+
+这表示：每个卡片最小宽度是 `220px`，<span>空间足够时自动增加列数，空间不足时自动换行</span>。
+<CodeWindow
+  lang="css"
+  code={`
+ .autoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+`}
+/>
+
+### 区域布局
+这种方式很适合后台页面或文档页 , <span>Grid 还可以给页面划分命名区域。</span><br/>
+
+<CodeWindow
+  lang="css"
+  code={`
+ .layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-areas:
+    "aside main";
+  gap: 24px;
+}
+
+.aside {
+  grid-area: aside;
+}
+
+.main {
+  grid-area: main;
+}
+`}
+/>
+
+### 使用建议
+- 卡片列表优先考虑 Grid
+
+- 简单的图标文字对齐不要用 Grid，Flex 更轻
+- 做响应式网格时，优先使用 `minmax(0, 1fr)`
+- 如果列数不固定，可以尝试 `auto-fit`
+
+### 小结
+Grid 的核心是“把空间切成行和列”。当你需要控制二维结构时，它比 Flex 更直接，也能让布局规则更清晰。
+</div>

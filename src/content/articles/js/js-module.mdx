@@ -1,0 +1,88 @@
+import styles from './js.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'js-module',
+  title: '组织代码边界',
+  category: 'JavaScript'
+}
+
+<div className={styles.content}>
+
+## 组织代码边界
+
+> <span>模块化</span>不是简单拆文件，而是让代码有清晰职责和稳定边界。
+
+### 适用场景
+
+- 封装请求方法
+- 拆分工具函数
+- 统一导出组件
+- 管理业务常量
+
+### 技术点总览
+
+| 技术点 | 主要作用 |
+| --- | --- |
+| 命名导出 | 一个模块里有多个能力时，可以使用命名导出。 |
+| 导入指定能力 | 调用方只引入自己需要的函数，依赖关系更清楚。 |
+| 封装 service | 接口请求适合单独放在 service 文件中，页面只关心业务结果。 |
+
+### 分批介绍
+
+#### 命名导出
+
+一个模块里有多个能力时，可以使用命名导出。
+
+<CodeWindow
+  lang="js"
+  code={`
+export function formatDate(date) {
+  return date.toLocaleDateString()
+}
+
+export function formatPrice(price) {
+  return '¥' + price.toFixed(2)
+}
+`}
+/>
+
+#### 导入指定能力
+
+调用方只引入自己需要的函数，依赖关系更清楚。
+
+<CodeWindow
+  lang="js"
+  code={`
+import { formatDate, formatPrice } from './format.js'
+
+formatDate(new Date())
+formatPrice(99)
+`}
+/>
+
+#### 封装 service
+
+接口请求适合单独放在 service 文件中，页面只关心业务结果。
+
+<CodeWindow
+  lang="js"
+  code={`
+export async function getArticleList() {
+  const res = await fetch('/api/articles')
+  return res.json()
+}
+`}
+/>
+
+### 使用建议
+
+- 不要让 utils 文件无限膨胀。
+- 避免循环依赖。
+- 导出的内容越少，边界越稳定。
+
+### 小结
+
+组织代码边界 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+
+</div>

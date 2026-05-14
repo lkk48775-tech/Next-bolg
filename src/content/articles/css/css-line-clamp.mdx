@@ -1,0 +1,158 @@
+import styles from './css.module.css';
+import CodeWindow from '@/components/CodeWindow'
+
+export const articleMeta = {
+  slug: 'css-line-clamp',
+  title: '多行文本省略',
+  category: 'css'
+}
+
+<div className={styles.content}>
+
+### 多行文本省略
+
+文本省略常用于文章摘要、商品标题、通知列表和卡片描述。它能让不同长度的内容保持统一的视觉高度。
+
+### 为什么需要文本省略
+
+在列表或卡片中，内容长度往往不固定。如果不做限制，某些卡片会被长文本撑得很高，导致整个布局参差不齐。
+
+常见问题：
+
+- 卡片高度不一致
+- 标题换行太多
+- 摘要占据过多空间
+- 按钮或标签被挤到不可预测的位置
+
+多行省略的作用就是让内容在有限空间内保持整齐。
+
+### 单行省略
+
+单行省略比较简单：
+
+<CodeWindow
+  lang="css"
+  code={`
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+`}
+/>
+
+这适合标题、表格单元格、菜单文字等一行内容。
+
+### 多行省略
+
+多行省略通常使用 `-webkit-line-clamp`。
+
+<CodeWindow
+  lang="css"
+  code={`
+.desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+`}
+/>
+
+这段代码表示最多显示 3 行，超出的内容隐藏。
+
+### 常见卡片写法
+
+<CodeWindow
+  lang="css"
+  code={`
+.articleDesc {
+  display: -webkit-box;
+  overflow: hidden;
+  max-height: 76px;
+  margin: 0;
+  color: rgb(92, 92, 92);
+  font-size: 14px;
+  line-height: 1.8;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+`}
+/>
+
+这里的 `max-height` 可以和 `line-height` 配合，让卡片高度更稳定。
+
+### 显示完整内容
+
+省略只是列表页的展示策略，不应该让用户永远看不到完整内容。常见做法有三种：
+
+| 方式 | 适合场景 |
+| --- | --- |
+| 详情页展示全文 | 文章、商品、项目 |
+| hover 浮层展示完整内容 | 桌面端卡片摘要 |
+| 点击展开 | 移动端或通知列表 |
+
+比如卡片摘要可以配合 `data-full` 做 hover 浮层：
+
+<CodeWindow
+  lang="css"
+  code={`
+.descWrap {
+  position: relative;
+}
+
+.descWrap::after {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 10px);
+  display: none;
+  width: min(320px, calc(100vw - 64px));
+  padding: 12px 14px;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 6px 8px 18px rgba(0, 0, 0, .14);
+  content: attr(data-full);
+}
+
+.descWrap:hover::after {
+  display: block;
+}
+`}
+/>
+
+### 小屏幕注意事项
+
+小屏幕空间有限，浮层很容易超出页面。可以让浮层向页面中间显示：
+
+<CodeWindow
+  lang="css"
+  code={`
+@media (max-width: 590px) {
+  .descWrap::after {
+    left: 50%;
+    width: min(300px, calc(100vw - 48px));
+    transform: translateX(-50%);
+  }
+}
+`}
+/>
+
+如果是触摸设备，也可以改成点击展开，而不是 hover。
+
+### 什么时候不适合省略
+
+以下内容不建议直接省略：
+
+- 正文主体内容
+- 用户必须阅读的提示
+- 错误信息
+- 表单校验说明
+- 法律、协议、付款等关键内容
+
+省略适合“预览”，不适合“必须完整阅读”的内容。
+
+### 小结
+
+文本省略能让列表和卡片保持整齐，但它只是展示层的处理方式。好的做法是在列表中控制高度，在详情页或交互浮层中提供完整内容。
+
+</div>
