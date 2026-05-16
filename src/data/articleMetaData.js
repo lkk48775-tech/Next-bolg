@@ -90,7 +90,7 @@ export const techSections = [
     "items": [
       {
         "slug": "css-flex",
-        "meta": "Flex 布局",
+        "meta": "Flex布局",
         "title": "弹性布局的核心",
         "desc": "Flex 适合处理一维方向上的排列、对齐和空间分配。它常用于导航栏、按钮组、卡片内部结构和左右分栏，让元素在不同宽度下保持自然伸缩。",
         "tags": [
@@ -101,7 +101,7 @@ export const techSections = [
       },
       {
         "slug": "css-grid",
-        "meta": "Grid 布局",
+        "meta": "Grid布局",
         "title": "二维网格布局",
         "desc": "Grid 更适合同时控制行和列的页面结构。它可以清晰地描述卡片网格、仪表盘、图片墙和复杂内容区，让布局规则更接近页面本身。",
         "tags": [

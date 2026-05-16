@@ -1,16 +1,27 @@
+/**
+ * 文章详情页组件（Client Component）
+ * 
+ * 从后端获取文章数据，用 next-mdx-remote 渲染 MDX 内容。
+ * 数据库中存的是纯 Markdown/MDX 格式（代码块用 ```语言 围栏语法）。
+ * 通过 components 映射把代码块自动渲染成 CodeWindow 组件。
+ */
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { useBlogContext } from '@/context/BlogContext'
-import { articleList } from '@/content/articleList'
 import Comment from '@/components/Comment'
+import CodeWindow from '@/components/CodeWindow'
+import EssayActions from '@/components/EssayActions'
 import articleHero from '@/assets/1-lite.webp'
+import axios from 'axios'
+import { MDXRemote } from 'next-mdx-remote'
 import styles from './ArticleDetail.module.css'
 
 const ARTICLE_THEME_STORAGE_KEY = 'article-color-theme'
+
 const articleThemes = [
   { key: 'classic', label: '经典' },
   { key: 'sky', label: '天蓝色' },
@@ -23,43 +34,29 @@ const getStoredArticleTheme = () => {
   return articleThemes.some((t) => t.key === storedTheme) ? storedTheme : 'classic'
 }
 
-// Dynamic MDX imports - map all article MDX files
-const modules = {
-  // CSS
-  'css/css-flex': () => import('@/content/articles/css/css-flex.mdx'),
-  'css/css-grid': () => import('@/content/articles/css/css-grid.mdx'),
-  'css/css-line-clamp': () => import('@/content/articles/css/css-line-clamp.mdx'),
-  'css/css-position-zindex': () => import('@/content/articles/css/css-position-zindex.mdx'),
-  'css/css-responsive': () => import('@/content/articles/css/css-responsive.mdx'),
-  'css/css-transition': () => import('@/content/articles/css/css-transition.mdx'),
-  // Browser
-  'browser/file-md5': () => import('@/content/articles/browser/file-md5.mdx'),
-  'browser/large-file-upload': () => import('@/content/articles/browser/large-file-upload.mdx'),
-  // JavaScript
-  'js/js-array-methods': () => import('@/content/articles/js/js-array-methods.mdx'),
-  'js/js-closure': () => import('@/content/articles/js/js-closure.mdx'),
-  'js/js-debounce': () => import('@/content/articles/js/js-debounce.mdx'),
-  'js/js-error-handling': () => import('@/content/articles/js/js-error-handling.mdx'),
-  'js/js-event-loop': () => import('@/content/articles/js/js-event-loop.mdx'),
-  'js/js-module': () => import('@/content/articles/js/js-module.mdx'),
-  'js/js-prototype': () => import('@/content/articles/js/js-prototype.mdx'),
-  'js/js-throttle': () => import('@/content/articles/js/js-throttle.mdx'),
-  // React
-  'react/dynamic-breadcrumb': () => import('@/content/articles/react/dynamic-breadcrumb.mdx'),
-  'react/react-component': () => import('@/content/articles/react/react-component.mdx'),
-  'react/react-controlled-form': () => import('@/content/articles/react/react-controlled-form.mdx'),
-  'react/react-hooks': () => import('@/content/articles/react/react-hooks.mdx'),
-  'react/react-performance': () => import('@/content/articles/react/react-performance.mdx'),
-  'react/react-router': () => import('@/content/articles/react/react-router.mdx'),
-  'react/react-state-render': () => import('@/content/articles/react/react-state-render.mdx'),
-  'react/virtual-list': () => import('@/content/articles/react/virtual-list.mdx'),
-  // Vue
-  'vue/vue-component-communication': () => import('@/content/articles/vue/vue-component-communication.mdx'),
-  'vue/vue-composition-api': () => import('@/content/articles/vue/vue-composition-api.mdx'),
-  'vue/vue-directive': () => import('@/content/articles/vue/vue-directive.mdx'),
-  'vue/vue-pinia': () => import('@/content/articles/vue/vue-pinia.mdx'),
-  'vue/vue-reactive': () => import('@/content/articles/vue/vue-reactive.mdx'),
-  'vue/vue-router': () => import('@/content/articles/vue/vue-router.mdx'),
+/**
+ * 自定义 components 映射：
+ * 把 Markdown 的 ```代码块 自动渲染成 CodeWindow 组件
+ * Markdown 的 ```css 会变成 <pre><code className="language-css">...</code></pre>
+ * 我们拦截 pre 标签，提取语言和代码内容，传给 CodeWindow
+ */
+const mdxComponents = {
+  // 拦截 <pre> 标签（Markdown 代码块会被编译成 <pre><code>...</code></pre>）
+  pre: ({ children }) => {
+    // children 是 <code> 元素
+    if (!children || !children.props) return <pre>{children}</pre>
+
+    const code = children.props.children || ''
+    const className = children.props.className || ''
+    // className 格式如 "language-css"，提取语言名
+    const lang = className.replace('language-', '').toUpperCase() || 'CODE'
+
+    return <CodeWindow lang={lang} code={code} />
+  },
+  // 保持其他元素的样式
+  table: (props) => <table className={styles.mdxTable} {...props} />,
+  th: (props) => <th {...props} />,
+  td: (props) => <td {...props} />,
 }
 
 export default function ArticleDetailClient() {
@@ -67,7 +64,8 @@ export default function ArticleDetailClient() {
   const params = useParams()
   const slug = params.slug?.join('/')
 
-  const [ArticleComponent, setArticleComponent] = useState(null)
+  const [articleData, setArticleData] = useState(null)
+  const [mdxSource, setMdxSource] = useState(null)
   const [status, setStatus] = useState('loading')
   const [typedDesc, setTypedDesc] = useState('')
   const [tocItems, setTocItems] = useState([])
@@ -76,21 +74,76 @@ export default function ArticleDetailClient() {
   const [articleTheme, setArticleTheme] = useState('classic')
   const contentRef = useRef(null)
   const pictureRef = useRef(null)
-  const tocTrackRef = useRef(null)
-
-  const articleInfo = useMemo(() => (
-    articleList.find((item) => item.slug === slug)
-  ), [slug])
+    const tocTrackRef = useRef(null)
 
   useEffect(() => { setArticleTheme(getStoredArticleTheme()) }, [])
   useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }) }, [slug])
   useEffect(() => { window.sessionStorage.setItem(ARTICLE_THEME_STORAGE_KEY, articleTheme) }, [articleTheme])
 
+  // 从后端获取文章数据并编译 MDX
   useEffect(() => {
-    const desc = articleInfo?.desc || ''
+    let alive = true
+    async function loadArticle() {
+      setStatus('loading')
+      setArticleData(null)
+      setMdxSource(null)
+
+      if (!slug) { setStatus('not-found'); return }
+      const articleSlug = slug.split('/').pop()
+
+      try {
+        // 1. 从后端获取文章数据
+        const res = await axios.get('/api/blog/article', { params: { slug: articleSlug } })
+        if (!alive) return
+        if (res.data.code !== 200 || !res.data.data) { setStatus('not-found'); return }
+
+        const data = res.data.data
+        setArticleData(data)
+
+        // 2. 编译 MDX 内容
+        if (data.content) {
+          // 动态导入 serialize（只在需要时加载）
+          const { serialize } = await import('next-mdx-remote/serialize')
+          const { default: remarkGfm } = await import('remark-gfm')
+
+          // 清理内容：去掉 import/export 语句和外层 div 包裹
+          let cleanContent = data.content
+            .replace(/^import\s+.+$/gm, '')
+            .replace(/^export\s+const\s+\w+\s*=\s*\{[\s\S]*?\}/gm, '')
+            .replace(/<div\s+className=\{styles\.\w+\}>/g, '')
+            .replace(/<\/div>\s*$/g, '')
+            .trim()
+
+          // 把 <CodeWindow lang="xxx" code={`...`} /> 转换成标准 Markdown 代码块
+          // 这样 serialize 就能正确处理
+          cleanContent = cleanContent.replace(
+            /<CodeWindow\s+lang="([^"]+)"\s+code=\{`([\s\S]*?)`\}\s*\/>/g,
+            (match, lang, code) => {
+              return '\n```' + lang.toLowerCase() + '\n' + code.trim() + '\n```\n'
+            }
+          )
+        
+          const mdx = await serialize(cleanContent, {
+            mdxOptions: { remarkPlugins: [remarkGfm] }
+          })
+          if (alive) setMdxSource(mdx)
+        }
+
+        if (alive) setStatus('success')
+      } catch (err) {
+        console.error('加载文章失败：', err)
+        if (alive) setStatus('not-found')
+      }
+    }
+    loadArticle()
+    return () => { alive = false }
+  }, [slug])
+
+  // 打字机效果
+  useEffect(() => {
+    const desc = articleData ? (articleData.title + '：' + (articleData.summary || '')) : ''
     const resetFrame = window.requestAnimationFrame(() => { setTypedDesc('') })
     if (!desc) return () => { window.cancelAnimationFrame(resetFrame) }
-
     const descChars = Array.from(desc)
     let index = 0
     const timer = window.setInterval(() => {
@@ -98,31 +151,13 @@ export default function ArticleDetailClient() {
       setTypedDesc(descChars.slice(0, index).join(''))
       if (index >= descChars.length) window.clearInterval(timer)
     }, 42)
-
     return () => { window.cancelAnimationFrame(resetFrame); window.clearInterval(timer) }
-  }, [articleInfo?.desc])
+  }, [articleData])
 
+  // 生成目录
   useEffect(() => {
-    let alive = true
-    async function loadArticle() {
-      setStatus('loading')
-      setArticleComponent(null)
-      if (!slug) { setStatus('not-found'); return }
-      const loader = modules[slug]
-      if (!loader) { setStatus('not-found'); return }
-      try {
-        const mod = await loader()
-        if (!alive) return
-        setArticleComponent(() => mod.default)
-        setStatus('success')
-      } catch { if (alive) setStatus('not-found') }
-    }
-    loadArticle()
-    return () => { alive = false }
-  }, [slug])
-
-  useEffect(() => {
-    if (status !== 'success' || !ArticleComponent) { setTocItems([]); setActiveHeading(''); return }
+    if (status !== 'success' || !mdxSource) { setTocItems([]); setActiveHeading(''); return }
+    // 延迟一帧等 MDX 渲染完成后再扫描标题
     const frame = window.requestAnimationFrame(() => {
       const contentNode = contentRef.current
       if (!contentNode) return
@@ -137,8 +172,9 @@ export default function ArticleDetailClient() {
       setActiveHeading(nextTocItems[0]?.id || '')
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [ArticleComponent, status])
+  }, [mdxSource, status])
 
+  // 目录高亮
   useEffect(() => {
     if (!tocItems.length) return undefined
     const headings = tocItems.map((item) => document.getElementById(item.id)).filter(Boolean)
@@ -151,6 +187,7 @@ export default function ArticleDetailClient() {
     return () => observer.disconnect()
   }, [tocItems])
 
+  // 头图可见性
   useEffect(() => {
     const pictureNode = pictureRef.current
     if (!pictureNode) return undefined
@@ -159,6 +196,7 @@ export default function ArticleDetailClient() {
     return () => observer.disconnect()
   }, [status])
 
+  // 目录滚动同步
   useEffect(() => {
     const tocTrack = tocTrackRef.current
     if (!tocTrack || !tocItems.length) return undefined
@@ -191,23 +229,32 @@ export default function ArticleDetailClient() {
       <main className={styles.page}>
         <div className={styles.state}>
           <h2>文章不存在</h2>
-          <Link href="/articles">返回文章列表</Link>
+          <Link href="/">返回首页</Link>
         </div>
       </main>
     )
   }
-
+ console.log(mdxSource);
   return (
     <>
       <div className={`${styles.headers} ${scrollTop > 270 ? styles.hiddenHeaders : ''}`}></div>
       <div className={styles.picture} ref={pictureRef}>
         <Image className={styles.pictureImage} src={articleHero} alt="" priority fill sizes="100vw" style={{ objectFit: 'cover' }} />
-        <div className={styles.pictureInfo}>
-          <h1>{articleInfo?.title || 'POETIZE'}</h1>
-          <div className={styles.pictureMeta}>
-            <span>Sakura</span><span>·</span><span>2025年</span><span>·</span><span>1006</span><span>·</span><span>1</span>
+          <div className={styles.pictureInfo}>
+            <h1>{articleData?.description || 'POETIZE'}</h1>
+            <div className={styles.pictureMeta}>
+              <span>Sakura</span><span>·</span><span>2025年</span><span>·</span><span>1006</span><span>·</span><span>1</span>
+            </div>
+            {articleData?.id && (
+              <EssayActions
+                title={articleData.title}
+                desc={articleData.summary || articleData.description || ''}
+                articleId={articleData.id}
+                likeCount={articleData.likeCount || articleData.like_count || 0}
+                liked={Boolean(articleData.liked)}
+              />
+            )}
           </div>
-        </div>
         <div className={styles.pictureTags}>
           {articleThemes.map((theme) => (
             <button className={articleTheme === theme.key ? styles.activeThemeButton : ''} type="button" key={theme.key} onClick={() => setArticleTheme(theme.key)}>{theme.label}</button>
@@ -222,7 +269,7 @@ export default function ArticleDetailClient() {
         <main className={styles.page}>
           <div className={styles.header}>
             <div className={styles.headerTop}>
-              <span className={styles.category}>{articleInfo?.category || 'Frontend'}</span>
+              <span className={styles.category}>{articleData?.category_name || 'Frontend'}</span>
               <span className={styles.headerHint}>Article brief</span>
             </div>
             <div className={styles.descCard}>
@@ -239,9 +286,15 @@ export default function ArticleDetailClient() {
               {status === 'loading' && (
                 <div className={styles.articleLoading}><span></span><span></span><span></span><span></span></div>
               )}
-              {ArticleComponent && <ArticleComponent />}
+              {mdxSource && <MDXRemote {...mdxSource} components={mdxComponents} />}
             </article>
-            {status === 'success' && <Comment className={styles.articleComment} title={articleInfo?.title} />}
+            {status === 'success' && (
+              <Comment
+                className={styles.articleComment}
+                articleId={articleData?.id}
+                title={articleData?.title}
+              />
+            )}
           </div>
         </main>
 

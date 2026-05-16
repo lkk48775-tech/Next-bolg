@@ -19,10 +19,20 @@ import { loadImageShape } from '@tsparticles/shape-image'
 
 function SakuraEffect() {
   const [init, setInit] = useState(false)
+  const [isLowPowerMode, setIsLowPowerMode] = useState(false)
   const particlesContainerRef = useRef(null)
 
   useEffect(() => {
     let isMounted = true
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const mobile = window.matchMedia('(max-width: 768px)').matches
+    const updateMode = () => {
+      setIsLowPowerMode(mediaQuery.matches || mobile)
+    }
+
+    updateMode()
+    mediaQuery.addEventListener?.('change', updateMode)
 
     initParticlesEngine(async (engine) => {
       await loadFull(engine)
@@ -37,6 +47,7 @@ function SakuraEffect() {
         particlesContainerRef.current.destroy(true)
         particlesContainerRef.current = null
       }
+      mediaQuery.removeEventListener?.('change', updateMode)
     }
   }, [])
 
@@ -47,19 +58,19 @@ function SakuraEffect() {
   const options = useMemo(() => ({
     fullScreen: { enable: true, zIndex: 9999 },
     background: { color: { value: 'transparent' } },
-    fpsLimit: 60,
+    fpsLimit: isLowPowerMode ? 30 : 60,
     particles: {
-      number: { value: 90, density: { enable: true, area: 900 } },
+      number: { value: isLowPowerMode ? 28 : 90, density: { enable: true, area: isLowPowerMode ? 1400 : 900 } },
       shape: {
         type: 'image',
         options: { image: { src: '/sakura-petal.svg', width: 64, height: 64 } }
       },
       opacity: { value: { min: 0.75, max: 1 } },
-      size: { value: { min: 2, max: 15 } },
+      size: { value: { min: 2, max: isLowPowerMode ? 10 : 15 } },
       move: {
         enable: true,
         direction: 'bottom',
-        speed: { min: 5, max: 10 },
+        speed: { min: isLowPowerMode ? 3 : 5, max: isLowPowerMode ? 6 : 10 },
         straight: false,
         random: true,
         outModes: { default: 'out' }
@@ -67,18 +78,18 @@ function SakuraEffect() {
       rotate: {
         value: { min: 0, max: 360 },
         direction: 'random',
-        animation: { enable: true, speed: { min: 25, max: 60 }, sync: false }
+        animation: { enable: true, speed: { min: isLowPowerMode ? 12 : 25, max: isLowPowerMode ? 28 : 60 }, sync: false }
       },
-      wobble: { enable: true, distance: 40, speed: { min: -12, max: 12 } },
+      wobble: { enable: true, distance: isLowPowerMode ? 20 : 40, speed: { min: isLowPowerMode ? -6 : -12, max: isLowPowerMode ? 6 : 12 } },
       tilt: {
         enable: true,
         value: { min: 0, max: 360 },
         direction: 'random',
-        animation: { enable: true, speed: { min: 15, max: 35 }, sync: false }
+        animation: { enable: true, speed: { min: isLowPowerMode ? 8 : 15, max: isLowPowerMode ? 18 : 35 }, sync: false }
       }
     },
     detectRetina: true
-  }), [])
+  }), [isLowPowerMode])
 
   if (!init) return null
 

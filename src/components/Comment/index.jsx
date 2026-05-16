@@ -1,131 +1,288 @@
-/**
- * 评论组件（Client Component）
- * 
- * 用于文章详情页底部，提供留言和回复功能。
- * 功能：
- * 1. 发表新评论（追加到列表顶部）
- * 2. 回复已有评论（嵌套回复）
- * 3. 展开/收起回复列表
- * 4. 评论计数（主评论 + 回复总数）
- * 
- * 数据：使用静态默认评论数据，暂未接入后端 API。
- * 
- * Props:
- * - className: 外部传入的额外样式类名
- * - initialComments: 初始评论数据（可选，默认使用内置数据）
- * - title: 文章标题（用于标识评论所属文章）
- */
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import styles from './Comment.module.css'
 
-const defaultComments = [
-  {
-    id: 1,
-    name: 'nclxl',
-    level: 'LV1',
-    badge: '结丹',
-    date: '2026-05-04',
-    content: '先看看',
-    replies: [],
-    avatarTone: 'ink'
-  },
-  {
-    id: 2,
-    name: '蓝桉',
-    level: 'LV4',
-    badge: '金仙',
-    date: '2026-04-27',
-    content: '@灵宝下载地址在哪里',
-    replies: [
-      {
-        id: 21,
-        name: '灵宝',
-        replyToName: '蓝桉',
-        date: '2026-04-27',
-        content: '在原更新帖正文下面，相关功能那块有跳转链接。',
-        avatarTone: 'bot'
-      },
-      {
-        id: 22,
-        name: '游客',
-        replyToName: '蓝桉',
-        date: '2026-04-28',
-        content: '评论区也有人贴过，可以往上翻一下。',
-        avatarTone: 'guest'
-      }
-    ],
-    avatarTone: 'blue'
-  },
-  {
-    id: 3,
-    name: '灵宝',
-    level: 'LV1',
-    badge: '大乘',
-    date: '2026-04-27',
-    content: '哈哈哈哈蹲地址的宝子我太懂！你往原更新帖正文往下扒拉扒拉呀，相关功能那块都给你留好跳转链接了！实在找不到翻评论区，好多先行者早就把链接扒出来了，快去冲。',
-    replies: [],
-    avatarTone: 'bot'
-  }
-]
+const COMMENT_USER_CACHE_KEY = 'comment-user-cache'
+const COMMENT_LIKED_STORAGE_PREFIX = 'comment-liked:'
 
-const normalizeComments = (comments) =>
+const normalizeComments = (comments = []) =>
   comments.map((comment) => ({
     ...comment,
-    replies: Array.isArray(comment.replies) ? comment.replies : []
+    avatarTone: comment.avatarTone || 'guest',
+    likeCount: comment.likeCount || 0,
+    liked: Boolean(comment.liked),
+    replyCount: comment.replyCount || 0,
+    replies: Array.isArray(comment.replies)
+      ? comment.replies.map((reply) => ({
+          ...reply,
+          avatarTone: reply.avatarTone || 'guest',
+          likeCount: reply.likeCount || 0,
+          liked: Boolean(reply.liked),
+        }))
+      : [],
   }))
 
-const getNowLabel = () =>
-  new Intl.DateTimeFormat('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
+const fetchJson = async (url, options = {}) => {
+  const response = await fetch(url, {
+    cache: 'no-store',
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+    },
   })
-    .format(new Date())
-    .replace(/\//g, '-')
 
-function Comment({ className = '', initialComments = defaultComments }) {
-  // comments 保存当前页面展示的评论列表，默认使用上面的静态评论。
-  const [comments, setComments] = useState(() => normalizeComments(initialComments))
-  // content 是评论输入框里的内容。
+  const payload = await response.json().catch(() => ({}))
+
+  if (!response.ok || payload.code !== 200) {
+    const error = new Error(payload.msg || '请求失败')
+    error.status = response.status
+    throw error
+  }
+
+  return payload
+}
+
+const fetchCommentsByArticleId = async (articleId) => {
+  const payload = await fetchJson(`/api/blog/comments?articleId=${articleId}`)
+  return normalizeComments(payload.data)
+}
+
+const buildUserSummary = (user) => {
+  if (!user?.id) return null
+
+  return {
+    id: user.id,
+    githubId: user.githubId || null,
+    username: user.username || user.name || '',
+    name: user.name || user.username || '',
+    image: user.image || null,
+  }
+}
+
+const readLocalUser = () => {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const rawValue = window.localStorage.getItem(COMMENT_USER_CACHE_KEY)
+    return rawValue ? JSON.parse(rawValue) : null
+  } catch {
+    return null
+  }
+}
+
+const persistLocalUser = (user) => {
+  if (typeof window === 'undefined') return
+
+  if (!user) {
+    window.localStorage.removeItem(COMMENT_USER_CACHE_KEY)
+    return
+  }
+
+  window.localStorage.setItem(COMMENT_USER_CACHE_KEY, JSON.stringify(user))
+}
+
+const getLikedStorageKey = (userId) => `${COMMENT_LIKED_STORAGE_PREFIX}${userId}`
+
+const readLikedCommentMap = (userId) => {
+  if (typeof window === 'undefined' || !userId) return {}
+
+  try {
+    const rawValue = window.localStorage.getItem(getLikedStorageKey(userId))
+    return rawValue ? JSON.parse(rawValue) : {}
+  } catch {
+    return {}
+  }
+}
+
+const persistLikedCommentMap = (userId, likedCommentMap) => {
+  if (typeof window === 'undefined' || !userId) return
+  window.localStorage.setItem(getLikedStorageKey(userId), JSON.stringify(likedCommentMap))
+}
+
+const buildLikedCommentMap = (comments) => {
+  const nextLikedCommentMap = {}
+
+  comments.forEach((comment) => {
+    if (comment.liked) {
+      nextLikedCommentMap[comment.id] = true
+    }
+
+    comment.replies.forEach((reply) => {
+      if (reply.liked) {
+        nextLikedCommentMap[reply.id] = true
+      }
+    })
+  })
+
+  return nextLikedCommentMap
+}
+
+const updateCommentLikeState = (comments, targetId, likeCount, liked) =>
+  comments.map((comment) => {
+    if (comment.id === targetId) {
+      return { ...comment, likeCount, liked }
+    }
+
+    return {
+      ...comment,
+      replies: comment.replies.map((reply) =>
+        reply.id === targetId ? { ...reply, likeCount, liked } : reply
+      ),
+    }
+  })
+
+function Comment({ className = '', articleId, title = '' }) {
+  const { data: session, status } = useSession()
+  const [cachedUser, setCachedUser] = useState(null)
+  const [likedCommentMap, setLikedCommentMap] = useState({})
+  const [comments, setComments] = useState([])
   const [content, setContent] = useState('')
   const [activeReply, setActiveReply] = useState(null)
   const [replyContent, setReplyContent] = useState('')
   const [expandedReplies, setExpandedReplies] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [submitPending, setSubmitPending] = useState(false)
+  const [replyPending, setReplyPending] = useState(false)
+  const [likePendingMap, setLikePendingMap] = useState({})
+  const [actionMessage, setActionMessage] = useState('')
 
-  // 评论总数 = 主评论数量 + 每条评论自己的回复数量。
+  const currentUser = useMemo(() => {
+    if (status === 'authenticated') {
+      return buildUserSummary(session?.user)
+    }
+
+    if (status === 'loading') {
+      return cachedUser
+    }
+
+    return null
+  }, [cachedUser, session?.user, status])
+
+  const currentUserId = currentUser?.id || null
   const commentTotal = useMemo(
     () => comments.length + comments.reduce((sum, comment) => sum + comment.replies.length, 0),
     [comments]
   )
 
-  const handleSubmit = (event) => {
-    // 阻止表单刷新页面，改为在当前组件里追加评论。
-    event.preventDefault()
-    const nextContent = content.trim()
+  const articleLabel = title ? `《${title}》` : '这篇文章'
 
-    if (!nextContent) return
+  useEffect(() => {
+    setCachedUser(readLocalUser())
+  }, [])
 
-    setComments((prevComments) => [
-      {
-        id: Date.now(),
-        name: '游客',
-        level: 'LV1',
-        badge: '初入',
-        date: new Date().toISOString().slice(0, 10),
-        content: nextContent,
-        replies: [],
-        avatarTone: 'guest'
-      },
-      ...prevComments
-    ])
-    setContent('')
-  }
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const nextUser = buildUserSummary(session?.user)
+      setCachedUser(nextUser)
+      persistLocalUser(nextUser)
+      return
+    }
 
-  const openReply = (commentId, targetName, replyId = null) => {
+    if (status === 'unauthenticated') {
+      setCachedUser(null)
+      persistLocalUser(null)
+      setLikedCommentMap({})
+    }
+  }, [session?.user, status])
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setLikedCommentMap({})
+      return
+    }
+
+    setLikedCommentMap(readLikedCommentMap(currentUserId))
+  }, [currentUserId])
+
+  useEffect(() => {
+    if (!actionMessage) return undefined
+
+    const timer = window.setTimeout(() => setActionMessage(''), 3200)
+    return () => window.clearTimeout(timer)
+  }, [actionMessage])
+
+  const clearLocalAuthCache = useCallback(() => {
+    setCachedUser(null)
+    persistLocalUser(null)
+    setLikedCommentMap({})
+  }, [])
+
+  const refreshComments = useCallback(
+    async ({ quiet = false } = {}) => {
+      if (!articleId) {
+        setComments([])
+        setLoadError('缺少文章 ID，评论功能暂时不可用。')
+        setLoading(false)
+        return
+      }
+
+      if (!quiet) {
+        setLoading(true)
+      }
+
+      setLoadError('')
+
+      try {
+        const nextComments = await fetchCommentsByArticleId(articleId)
+        setComments(nextComments)
+        setLikedCommentMap(buildLikedCommentMap(nextComments))
+        setExpandedReplies((prevExpandedReplies) => {
+          const nextExpandedReplies = {}
+
+          nextComments.forEach((comment) => {
+            nextExpandedReplies[comment.id] = prevExpandedReplies[comment.id] || false
+          })
+
+          return nextExpandedReplies
+        })
+      } catch (error) {
+        setLoadError(error.message || '加载评论失败，请稍后再试。')
+      } finally {
+        if (!quiet) {
+          setLoading(false)
+        }
+      }
+    },
+    [articleId]
+  )
+
+  useEffect(() => {
+    void refreshComments()
+  }, [refreshComments])
+
+  const loginWithGithub = useCallback(async () => {
+    const callbackUrl = typeof window === 'undefined' ? '/' : window.location.href
+    await signIn('github', { callbackUrl })
+  }, [])
+
+  const ensureAuthenticated = useCallback(
+    async (actionName) => {
+      if (status === 'authenticated') {
+        return true
+      }
+
+      if (status === 'loading') {
+        if (currentUser) {
+          return true
+        }
+
+        setActionMessage('正在确认登录状态，请稍后再试。')
+        return false
+      }
+
+      setActionMessage(`请先通过 GitHub 登录后再${actionName}。`)
+      await loginWithGithub()
+      return false
+    },
+    [currentUser, loginWithGithub, status]
+  )
+
+  const openReply = async (commentId, targetName, replyId = null) => {
+    if (!(await ensureAuthenticated('回复'))) return
+
     if (
       activeReply?.commentId === commentId &&
       activeReply?.targetName === targetName &&
@@ -136,6 +293,10 @@ function Comment({ className = '', initialComments = defaultComments }) {
       return
     }
 
+    setExpandedReplies((prevExpandedReplies) => ({
+      ...prevExpandedReplies,
+      [commentId]: true,
+    }))
     setActiveReply({ commentId, targetName, replyId })
     setReplyContent('')
   }
@@ -147,49 +308,178 @@ function Comment({ className = '', initialComments = defaultComments }) {
 
     setExpandedReplies((prevExpandedReplies) => ({
       ...prevExpandedReplies,
-      [commentId]: !prevExpandedReplies[commentId]
+      [commentId]: !prevExpandedReplies[commentId],
     }))
   }
 
-  const handleReplySubmit = (event, commentId) => {
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    if (!(await ensureAuthenticated('评论'))) return
+
+    const nextContent = content.trim()
+
+    if (!nextContent) {
+      setActionMessage('评论内容不能为空。')
+      return
+    }
+
+    setSubmitPending(true)
+
+    try {
+      await fetchJson('/api/blog/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          articleId,
+          content: nextContent,
+        }),
+      })
+
+      setContent('')
+      setActionMessage('评论发布成功。')
+      await refreshComments({ quiet: true })
+    } catch (error) {
+      if (error.status === 401) {
+        clearLocalAuthCache()
+        setActionMessage('登录状态已失效，正在跳转 GitHub 重新登录。')
+        await loginWithGithub()
+        return
+      }
+
+      setActionMessage(error.message || '评论发布失败，请稍后再试。')
+    } finally {
+      setSubmitPending(false)
+    }
+  }
+
+  const handleReplySubmit = async (event, commentId) => {
     event.preventDefault()
     const nextContent = replyContent.trim()
 
-    if (!nextContent || !activeReply) return
+    if (!nextContent || !activeReply) {
+      setActionMessage('回复内容不能为空。')
+      return
+    }
 
-    setComments((prevComments) =>
-      prevComments.map((comment) => {
-        if (comment.id !== commentId) return comment
+    if (!(await ensureAuthenticated('回复'))) return
 
-        return {
-          ...comment,
-          replies: [
-            ...comment.replies,
-            {
-              id: Date.now(),
-              name: '游客',
-              replyToName: activeReply.targetName,
-              date: getNowLabel(),
-              content: nextContent,
-              avatarTone: 'guest'
-            }
-          ]
-        }
+    const parentId = activeReply.replyId || commentId
+    setReplyPending(true)
+
+    try {
+      await fetchJson('/api/blog/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          articleId,
+          parentId,
+          content: nextContent,
+        }),
       })
-    )
-    setExpandedReplies((prevExpandedReplies) => ({
-      ...prevExpandedReplies,
-      [commentId]: true
-    }))
-    setActiveReply(null)
-    setReplyContent('')
+
+      setExpandedReplies((prevExpandedReplies) => ({
+        ...prevExpandedReplies,
+        [commentId]: true,
+      }))
+      setActiveReply(null)
+      setReplyContent('')
+      setActionMessage('回复发布成功。')
+      await refreshComments({ quiet: true })
+    } catch (error) {
+      if (error.status === 401) {
+        clearLocalAuthCache()
+        setActionMessage('登录状态已失效，正在跳转 GitHub 重新登录。')
+        await loginWithGithub()
+        return
+      }
+
+      setActionMessage(error.message || '回复发布失败，请稍后再试。')
+    } finally {
+      setReplyPending(false)
+    }
   }
 
-  const isReplyOpen = (commentId, targetName, replyId = null) => (
+  const handleLike = async (commentId) => {
+    if (!(await ensureAuthenticated('点赞'))) return
+
+    setLikePendingMap((prevLikePendingMap) => ({
+      ...prevLikePendingMap,
+      [commentId]: true,
+    }))
+
+    try {
+      const payload = await fetchJson(`/api/blog/comments/${commentId}/like`, {
+        method: 'POST',
+      })
+
+      const nextLiked = Boolean(payload.data.liked)
+
+      setComments((prevComments) =>
+        updateCommentLikeState(prevComments, commentId, payload.data.likeCount, nextLiked)
+      )
+
+      const nextLikedCommentMap = {
+        ...likedCommentMap,
+      }
+
+      if (nextLiked) {
+        nextLikedCommentMap[commentId] = true
+      } else {
+        delete nextLikedCommentMap[commentId]
+      }
+
+      setLikedCommentMap(nextLikedCommentMap)
+
+      if (currentUserId) {
+        persistLikedCommentMap(currentUserId, nextLikedCommentMap)
+      }
+
+      setActionMessage(nextLiked ? '点赞成功。' : '已取消点赞。')
+    } catch (error) {
+      if (error.status === 401) {
+        clearLocalAuthCache()
+        setActionMessage('登录状态已失效，正在跳转 GitHub 重新登录。')
+        await loginWithGithub()
+        return
+      }
+
+      setActionMessage(error.message || '点赞失败，请稍后再试。')
+    } finally {
+      setLikePendingMap((prevLikePendingMap) => ({
+        ...prevLikePendingMap,
+        [commentId]: false,
+      }))
+    }
+  }
+
+  const isReplyOpen = (commentId, targetName, replyId = null) =>
     activeReply?.commentId === commentId &&
     activeReply?.targetName === targetName &&
     activeReply?.replyId === replyId
-  )
+
+  const renderAvatar = (name, tone, avatar, variant = 'comment') => {
+    const avatarClassName = variant === 'reply' ? styles.replyAvatar : styles.avatar
+    const initial = name?.slice(0, 1)?.toUpperCase() || '?'
+
+    return (
+      <div className={`${avatarClassName} ${styles[tone]}`}>
+        {avatar ? (
+          <span
+            className={styles.avatarImage}
+            style={{ backgroundImage: `url(${avatar})` }}
+            aria-hidden="true"
+          />
+        ) : (
+          initial
+        )}
+      </div>
+    )
+  }
 
   const renderReplyBox = (commentId, textareaId) => (
     <form className={styles.replyBox} onSubmit={(event) => handleReplySubmit(event, commentId)}>
@@ -208,10 +498,18 @@ function Comment({ className = '', initialComments = defaultComments }) {
       <div className={styles.replyToolbar}>
         <span>{replyContent.length}/2000</span>
         <div>
-          <button type="button" onClick={() => setActiveReply(null)}>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveReply(null)
+              setReplyContent('')
+            }}
+          >
             取消
           </button>
-          <button type="submit" disabled={!replyContent.trim()}>回复</button>
+          <button type="submit" disabled={replyPending || !replyContent.trim()}>
+            {replyPending ? '提交中' : '回复'}
+          </button>
         </div>
       </div>
     </form>
@@ -219,34 +517,52 @@ function Comment({ className = '', initialComments = defaultComments }) {
 
   return (
     <section className={`${styles.comment} ${className}`} id="comment">
-      {/* 装饰层，只负责视觉效果，不参与交互。 */}
       <div className={styles.petals} aria-hidden="true"></div>
 
-      {/* 评论输入区域。 */}
       <form className={styles.messageBox} onSubmit={handleSubmit}>
         <h2 className={styles.messageTitle}>
-          <span className={styles.titleIcon}>□</span>
+          <span className={styles.titleIcon}></span>
           留言
         </h2>
         <div className={styles.editor}>
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            placeholder="说点什么... 想让 AI 回你？试试 @灵宝"
-            maxLength="220"
+            placeholder={
+              articleId
+                ? currentUser
+                  ? `说点什么吧，欢迎在${articleLabel}下留言。`
+                  : `通过 GitHub 登录后，就可以在${articleLabel}下留言了。`
+                : '评论功能暂时不可用。'
+            }
+            maxLength="2000"
+            disabled={!articleId}
           />
           <div className={styles.editorArt} aria-hidden="true">
-            <div className={styles.easle}>Mashiro<br />桌子中</div>
+            <div className={styles.easle}>Mashiro<br />桌子旁</div>
             <div className={styles.cat}></div>
             <div className={styles.shelf}></div>
           </div>
         </div>
         <div className={styles.toolbar}>
-          <div className={styles.tools} aria-hidden="true">
-            <span>◉</span>
-            <span>▧</span>
+          <div className={styles.statusArea}>
+            {currentUser ? (
+              <div className={styles.userBadge}>
+                <span className={styles.userBadgeLabel}>已登录</span>
+                <strong className={styles.userBadgeName}>{currentUser.username || currentUser.name}</strong>
+              </div>
+            ) : (
+              <button className={styles.loginButton} type="button" onClick={() => void loginWithGithub()}>
+                GitHub 登录
+              </button>
+            )}
+            <p className={styles.actionMessage}>
+              {actionMessage || (currentUser ? '' : '  ')}
+            </p>
           </div>
-          <button type="submit">提交</button>
+          <button type="submit" disabled={submitPending || !articleId || (Boolean(currentUser) && !content.trim())}>
+            {submitPending ? '提交中' : '提交'}
+          </button>
         </div>
       </form>
 
@@ -256,98 +572,146 @@ function Comment({ className = '', initialComments = defaultComments }) {
         <strong>{commentTotal} 条留言</strong>
       </div>
 
-      {/* 评论列表，根据 comments 状态渲染。 */}
-      <div className={styles.commentList}>
-        {comments.map((comment) => (
-          <article className={styles.commentItem} key={comment.id}>
-            <div className={`${styles.avatar} ${styles[comment.avatarTone]}`}>
-              {comment.name.slice(0, 1).toUpperCase()}
-            </div>
+      {loading && (
+        <div className={styles.feedbackCard}>
+          <p>评论加载中...</p>
+        </div>
+      )}
 
-            <div className={styles.commentMain}>
-              <div className={styles.commentTop}>
-                <div className={styles.author}>
-                  <div>
-                    <strong>{comment.name}</strong>
-                    <span className={styles.level}>{comment.level}</span>
-                    <span className={styles.badge}>{comment.badge}</span>
-                  </div>
-                  <time>{comment.date}</time>
-                </div>
-              </div>
+      {!loading && loadError && (
+        <div className={styles.feedbackCard}>
+          <p>{loadError}</p>
+          <div className={styles.feedbackActions}>
+            <button className={styles.retryButton} type="button" onClick={() => void refreshComments()}>
+              重新加载
+            </button>
+          </div>
+        </div>
+      )}
 
-              <p>{comment.content}</p>
+      {!loading && !loadError && comments.length === 0 && (
+        <div className={styles.feedbackCard}>
+          <p>还没有留言，来抢沙发吧。</p>
+        </div>
+      )}
 
-              <div className={styles.commentActions}>
-                <button type="button" aria-label="点赞">
-                  ♡ 赞 0
-                </button>
-                <button
-                  className={isReplyOpen(comment.id, comment.name) ? styles.activeAction : ''}
-                  type="button"
-                  onClick={() => openReply(comment.id, comment.name)}
-                >
-                  ◯ 回复
-                </button>
-              </div>
+      {!loadError && comments.length > 0 && (
+        <div className={styles.commentList}>
+          {comments.map((comment) => (
+            <article className={styles.commentItem} key={comment.id}>
+              {renderAvatar(comment.name, comment.avatarTone, comment.avatar)}
 
-              {activeReply?.commentId === comment.id && activeReply.replyId === null && (
-                renderReplyBox(comment.id, `reply-${comment.id}`)
-              )}
-
-              {comment.replies.length > 0 && (
-                <button className={styles.replyToggle} type="button" onClick={() => toggleReplies(comment.id)}>
-                  {expandedReplies[comment.id]
-                    ? '收起评论'
-                    : `展开评论 (${comment.replies.length})`}
-                </button>
-              )}
-
-              {comment.replies.length > 0 && expandedReplies[comment.id] && (
-                <div className={styles.replyList}>
-                  {comment.replies.map((reply) => (
-                    <div className={styles.replyItem} key={reply.id}>
-                      <div className={`${styles.replyAvatar} ${styles[reply.avatarTone]}`}>
-                        {reply.name.slice(0, 1).toUpperCase()}
-                      </div>
-                      <div className={styles.replyMain}>
-                        <div className={styles.replyMeta}>
-                          <strong>{reply.name}</strong>
-                          <span>回复</span>
-                          <button
-                            className={styles.replyTarget}
-                            type="button"
-                            onClick={() => openReply(comment.id, reply.name, reply.id)}
-                          >
-                            @{reply.replyToName}
-                          </button>
-                          <time>{reply.date}</time>
-                        </div>
-                        <p>{reply.content}</p>
-                        <div className={styles.commentActions}>
-                          <button type="button" aria-label="点赞">
-                            ♡ 赞 0
-                          </button>
-                          <button
-                            className={isReplyOpen(comment.id, reply.name, reply.id) ? styles.activeAction : ''}
-                            type="button"
-                            onClick={() => openReply(comment.id, reply.name, reply.id)}
-                          >
-                            ◯ 回复
-                          </button>
-                        </div>
-                        {activeReply?.commentId === comment.id && activeReply.replyId === reply.id && (
-                          renderReplyBox(comment.id, `reply-${comment.id}-${reply.id}`)
-                        )}
-                      </div>
+              <div className={styles.commentMain}>
+                <div className={styles.commentTop}>
+                  <div className={styles.author}>
+                    <div>
+                      <strong>{comment.name}</strong>
+                      <span className={styles.level}>{comment.level}</span>
+                      <span className={styles.badge}>{comment.badge}</span>
                     </div>
-                  ))}
+                    <time>{comment.date}</time>
+                  </div>
                 </div>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
+
+                <p>{comment.content}</p>
+
+                <div className={styles.commentActions}>
+                  <button
+                    className={likedCommentMap[comment.id] ? styles.likedAction : ''}
+                    type="button"
+                    aria-label="点赞评论"
+                    disabled={Boolean(likePendingMap[comment.id])}
+                    onClick={() => void handleLike(comment.id)}
+                  >
+                    <span
+                      className={`iconfont ${likedCommentMap[comment.id] ? 'icon-xihuan' : 'icon-xihuan1'} ${styles.icon}`}
+                      aria-hidden="true"
+                    ></span>
+                    赞 {comment.likeCount}
+                  </button>
+                  <button
+                    className={isReplyOpen(comment.id, comment.name) ? styles.activeAction : ''}
+                    type="button"
+                    onClick={() => void openReply(comment.id, comment.name)}
+                  >
+                    <span
+                      className={`iconfont icon-huifu ${styles.icon}`}
+                      aria-hidden="true"
+                    ></span>
+                    回复
+                  </button>
+                </div>
+
+                {activeReply?.commentId === comment.id && activeReply.replyId === null && (
+                  renderReplyBox(comment.id, `reply-${comment.id}`)
+                )}
+
+                {comment.replies.length > 0 && (
+                  <button className={styles.replyToggle} type="button" onClick={() => toggleReplies(comment.id)}>
+                    {expandedReplies[comment.id]
+                      ? '收起评论'
+                      : `展开评论 (${comment.replies.length})`}
+                  </button>
+                )}
+
+                {comment.replies.length > 0 && expandedReplies[comment.id] && (
+                  <div className={styles.replyList}>
+                    {comment.replies.map((reply) => (
+                      <div className={styles.replyItem} key={reply.id}>
+                        {renderAvatar(reply.name, reply.avatarTone, reply.avatar, 'reply')}
+                        <div className={styles.replyMain}>
+                          <div className={styles.replyMeta}>
+                            <strong>{reply.name}</strong>
+                            <span>回复</span>
+                            <button
+                              className={styles.replyTarget}
+                              type="button"
+                              onClick={() => void openReply(comment.id, reply.name, reply.id)}
+                            >
+                              @{reply.replyToName}
+                            </button>
+                            <time>{reply.date}</time>
+                          </div>
+                          <p>{reply.content}</p>
+                          <div className={styles.commentActions}>
+                            <button
+                              className={likedCommentMap[reply.id] ? styles.likedAction : ''}
+                              type="button"
+                              aria-label="点赞回复"
+                              disabled={Boolean(likePendingMap[reply.id])}
+                              onClick={() => void handleLike(reply.id)}
+                            >
+                              <span
+                                className={`iconfont ${likedCommentMap[reply.id] ? 'icon-xihuan' : 'icon-xihuan1'} ${styles.icon}`}
+                                aria-hidden="true"
+                              ></span>
+                              赞 {reply.likeCount}
+                            </button>
+                            <button
+                              className={isReplyOpen(comment.id, reply.name, reply.id) ? styles.activeAction : ''}
+                              type="button"
+                              onClick={() => void openReply(comment.id, reply.name, reply.id)}
+                            >
+                              <span
+                                className={`iconfont icon-huifu ${styles.icon}`}
+                                aria-hidden="true"
+                              ></span>
+                              回复
+                            </button>
+                          </div>
+                          {activeReply?.commentId === comment.id && activeReply.replyId === reply.id && (
+                            renderReplyBox(comment.id, `reply-${comment.id}-${reply.id}`)
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   )
 }

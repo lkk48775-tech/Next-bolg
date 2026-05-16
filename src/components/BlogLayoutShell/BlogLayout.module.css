@@ -451,6 +451,38 @@
   }
 }
 
+@media (max-width: 640px) {
+  .Stickiness {
+    right: 6px;
+    bottom: 20px;
+    width: 42px;
+    min-height: 126px;
+    padding: 6px 0;
+  }
+
+  .Stickiness .icon {
+    width: 42px;
+    height: 36px;
+    font-size: 19px;
+  }
+
+  .Stickiness .themeToggle span {
+    width: 24px;
+    height: 24px;
+  }
+
+  .Stickiness .themeToggle span::before {
+    inset: 6px;
+  }
+
+  .Stickiness .themeToggle span::after {
+    top: 4px;
+    right: 4px;
+    width: 15px;
+    height: 15px;
+  }
+}
+
 .themeAnimating .themeToggle span {
   animation: themeTogglePop .72s cubic-bezier(.22, 1, .36, 1);
 }

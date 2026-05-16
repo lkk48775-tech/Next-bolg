@@ -64,30 +64,31 @@
 }
 
 .navItem {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 16px;
+  display: inline-flex;
   align-items: center;
-  padding: 5px 0;
+  width: fit-content;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   color: var(--blog-text, rgb(30, 41, 59));
   font-size: 16px;
   font-weight: 800;
   line-height: 1.4;
   text-decoration: none;
   transition:
+    border-color .2s ease,
+    background-color .2s ease,
+    box-shadow .2s ease,
     color .2s ease,
     transform .2s ease;
 }
 
-.navItem i {
-  color: currentColor;
-  font-size: 24px;
-  line-height: 1;
-}
-
 .navItem:hover,
 .activeNavItem {
-  color: var(--blog-accent, rgb(37, 99, 235));
+  border-color: rgba(236, 72, 153, .2);
+  background-color: rgba(253, 242, 248, .86);
+  color: rgb(219, 39, 119);
+  box-shadow: 0 10px 22px rgba(236, 72, 153, .1);
   transform: translateX(3px);
 }
 
@@ -234,39 +235,39 @@
 }
 
 .archiveEntry:hover {
-  color: var(--blog-accent, rgb(37, 99, 235));
-  border-color: rgba(37, 99, 235, .14);
+  color: rgb(219, 39, 119);
+  border-color: rgba(236, 72, 153, .18);
   background:
-    linear-gradient(90deg, rgba(239, 246, 255, .9), rgba(255, 255, 255, .74));
+    linear-gradient(90deg, rgba(253, 242, 248, .92), rgba(255, 255, 255, .76));
   box-shadow:
-    0 10px 24px rgba(37, 99, 235, .08),
-    inset 3px 0 0 var(--blog-accent, rgb(37, 99, 235));
+    0 10px 24px rgba(236, 72, 153, .1),
+    inset 3px 0 0 rgb(236, 72, 153);
   transform: translateX(6px);
 }
 
 .archiveEntry:hover::before {
-  background-color: var(--blog-accent, rgb(37, 99, 235));
-  box-shadow: 0 0 0 5px rgba(37, 99, 235, .12);
+  background-color: rgb(236, 72, 153);
+  box-shadow: 0 0 0 5px rgba(236, 72, 153, .14);
   transform: translateY(-50%) scale(1.18);
 }
 
 .archiveEntry:hover time {
-  color: var(--blog-accent, rgb(37, 99, 235));
+  color: rgb(219, 39, 119);
   transform: translateX(2px);
 }
 
 .archiveEntry:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, .24);
+  outline: 3px solid rgba(236, 72, 153, .22);
   outline-offset: 2px;
 }
 
 :global(.darkTheme) .archiveEntry:hover {
-  border-color: rgba(56, 189, 248, .22);
+  border-color: rgba(244, 114, 182, .28);
   background:
-    linear-gradient(90deg, rgba(14, 116, 144, .18), rgba(30, 41, 59, .76));
+    linear-gradient(90deg, rgba(157, 23, 77, .24), rgba(30, 41, 59, .76));
   box-shadow:
     0 12px 28px rgba(0, 0, 0, .28),
-    inset 3px 0 0 var(--blog-accent, rgb(56, 189, 248));
+    inset 3px 0 0 rgb(244, 114, 182);
 }
 
 .hly {
@@ -332,7 +333,8 @@
   }
 
   .navItem {
-    gap: 10px;
+    justify-content: center;
+    width: 100%;
     font-size: 14px;
   }
 

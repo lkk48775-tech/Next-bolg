@@ -55,7 +55,7 @@ function BlogLayoutInner({ children }) {
       <div className={styles.Stickiness}>
         {/* 回到顶部按钮：滚动超过 700px 时显示 */}
         <li
-          className={`iconfont icon-home ${styles.icon} ${scrollTop > 700 ? styles.showIcon : styles.hiddenIcon} ${styles.icon1}`}
+          className={`iconfont icon-lvxing ${styles.icon} ${scrollTop > 700 ? styles.showIcon : styles.hiddenIcon} ${styles.icon1}`}
           onClick={goToTop}
         ></li>
         {/* 主题切换按钮 */}

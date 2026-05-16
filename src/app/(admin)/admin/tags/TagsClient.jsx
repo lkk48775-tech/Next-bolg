@@ -1,30 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { allHomeArticles } from '@/data/articleMetaData'
 import styles from './tags.module.css'
-import axios, { all } from 'axios'
-// github 相关
-import { useSession } from "next-auth/react";
-import { signIn } from "next-auth/react"
+import axios from 'axios'
+
 const ROW_HEIGHT = 68
 const CONTAINER_HEIGHT = 440
 const OVERSCAN = 3
 
-// function getInitialArticles() {
-//   return allHomeArticles.map((article) => {
-//     let category = 'Other'
-//     if (article.slug.startsWith('css-')) category = 'CSS'
-//     else if (article.slug.startsWith('js-')) category = 'JavaScript'
-//     else if (article.slug.startsWith('vue-')) category = 'Vue'
-//     else if (article.slug.startsWith('react-') || article.slug === 'dynamic-breadcrumb' || article.slug === 'virtual-list') category = 'React'
-//     else if (article.slug === 'file-md5' || article.slug === 'large-file-upload') category = 'Browser'
-//     return { ...article, category }
-//   })
-// }
-
-export default function TagsClient({ session }) {
+export default function TagsClient() {
   const [articles, setArticles] = useState([])
+  const [sections, setSections] = useState([])
   const [filter, setFilter] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -35,42 +21,73 @@ export default function TagsClient({ session }) {
     return articles.filter((a) => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q))
   }, [articles, filter])
 
-  // 页面初始化时获取数据
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await axios.get('/api/tags');
-
-        // 关键：把查询到的数据放进去
-        setArticles(res.data.data);
-
-        console.log('成功加载文章：', res.data.data);
+        const res = await axios.get('/api/tags')
+        setArticles(res.data.data || [])
       } catch (err) {
-        console.error('请求失败：', err);
+        console.error('请求文章失败：', err)
       }
-    };
+    }
 
-    fetchArticles();
-  }, []);
-console.log(articles);
-  // 添加文章
-  const handleAddArticle =async (articleData) => {
-    // 判断是否重复
-    if (articles.some((a) => a.title === articleData.name)){
-      alert('文章已存在');
+    const fetchSections = async () => {
+      try {
+        const res = await axios.get('/api/sections')
+        const names = (res.data.data || []).map((item) => item.name)
+        setSections(names)
+      } catch (err) {
+        console.error('请求专题失败：', err)
+        setSections([])
+      }
+    }
+
+    fetchArticles()
+    fetchSections()
+  }, [])
+
+  const handleAddArticle = async (articleData) => {
+    if (articles.some((a) => a.title === articleData.name)) {
+      alert('文章已存在')
       return
     }
-    setArticles([{ slug: articleData.name, title: articleData.name, meta: articleData.alias, desc: articleData.summary, tags: articleData.techStacks, category: articleData.section }, ...articles])
-   console.log(articleData);
-    const res =await axios.post('/api/tags',{
-    name:articleData.name,
-    alias:articleData.alias,
-    summary:articleData.summary,
-    detail:articleData.detail,
-    section:articleData.section,
-    techStacks:articleData.techStacks
-   })
-   console.log(res);
+
+    setArticles([
+      {
+        slug: articleData.name,
+        title: articleData.name,
+        meta: articleData.alias,
+        desc: articleData.summary,
+        tags: articleData.techStacks,
+        category: articleData.section
+      },
+      ...articles
+    ])
+
+    const res = await axios.post('/api/tags', {
+      name: articleData.name,
+      alias: articleData.alias,
+      summary: articleData.summary,
+      detail: articleData.detail,
+      section: articleData.section,
+      techStacks: articleData.techStacks,
+      slug: articleData.slug
+    })
+    console.log('数据库写入：', res.data)
+
+    if (articleData.detail) {
+      try {
+        const mdxRes = await axios.post('/api/blog/createArticle', {
+          slug: articleData.slug || articleData.name,
+          category: articleData.section,
+          content: articleData.detail
+        })
+        console.log('MDX 文件创建：', mdxRes.data)
+      } catch (err) {
+        console.error('创建 MDX 文件失败：', err)
+      }
+    }
+
     setDrawerOpen(false)
   }
 
@@ -81,34 +98,17 @@ console.log(articles);
   const confirmDelete = async () => {
     setArticles(articles.filter((a) => a.title !== deleteTarget))
     setDeleteTarget(null)
-     axios.delete("/api/tags", {
+    axios.delete('/api/tags', {
       params: {
-         name: deleteTarget
+        name: deleteTarget
       }
-    });
+    })
   }
 
   const cancelDelete = () => {
     setDeleteTarget(null)
   }
-  const setA=async()=>{
-   try {
-    const res = await axios.post('/api/articles',{
-      name:'1',
-      article_count:"1",
-       created_at:"1"
-    })
-    console.log(res.data)
-   } catch (error) {
-    console.log('错误');
-   }
-  }
 
-  // guthb
-  const { data: session1 } =useSession();
-  console.log(session1);
-  // console.log(session1.accessToken);
-  // session 通过 props 从 page.jsx 传入
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -120,21 +120,6 @@ console.log(articles);
         <button className={styles.addBtn} onClick={() => setDrawerOpen(true)}>
           + 添加文章
         </button>
-        <button className={styles.addBtn} onClick={()=>setA()}>
-         测试1
-        </button>
-        <button className={styles.addBtn} onClick={() => signIn('github')}>
-          测试
-        </button>
-        {/* <div>
-          {session?.user?.name}
-
-          <img
-            src={session?.user?.image}
-            width={100}
-          />
-        </div>   */}
-        
         <div className={styles.searchBar}>
           <input
             type="text"
@@ -159,17 +144,15 @@ console.log(articles);
         </div>
       )}
 
-      {/* 右侧添加抽屉 */}
-      <AddTagDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onSubmit={handleAddArticle} sections={articles.map(a => a.category).filter((v, i, arr) => arr.indexOf(v) === i)} />
+      <AddTagDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onSubmit={handleAddArticle} sections={sections} />
 
-      {/* 删除确认弹框 */}
       {deleteTarget && (
         <div className={styles.modalOverlay} onClick={cancelDelete}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalIcon}>⚠</div>
+            <div className={styles.modalIcon}>!</div>
             <h3 className={styles.modalTitle}>确认删除</h3>
             <p className={styles.modalDesc}>
-              确定要删除文章 <strong>「{deleteTarget}」</strong> 吗？此操作不可撤销。
+              确定要删除文章 <strong>{deleteTarget}</strong> 吗？此操作不可撤销。
             </p>
             <div className={styles.modalActions}>
               <button className={styles.modalCancel} onClick={cancelDelete}>取消</button>
@@ -183,21 +166,21 @@ console.log(articles);
 }
 
 function AddTagDrawer({ open, onClose, onSubmit, sections }) {
-  const [form, setForm] = useState({ name: '', alias: '', summary: '', detail: '', section: '' })
+  const [form, setForm] = useState({ name: '', techName: '', alias: '', summary: '', detail: '', section: '' })
   const [techStacks, setTechStacks] = useState([])
   const [techInput, setTechInput] = useState('')
 
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden'
-      setForm({ name: '', alias: '', summary: '', detail: '', section: sections[0] || '' })
+      setForm({ name: '', techName: '', alias: '', summary: '', detail: '', section: '' })
       setTechStacks([])
       setTechInput('')
     } else {
       document.body.style.overflow = ''
     }
     return () => { document.body.style.overflow = '' }
-  }, [open, sections])
+  }, [open])
 
   const handleChange = (field) => (e) => {
     setForm({ ...form, [field]: e.target.value })
@@ -221,20 +204,20 @@ function AddTagDrawer({ open, onClose, onSubmit, sections }) {
     setTechStacks(techStacks.filter((t) => t !== tech))
   }
 
-  // 判断表单是否填写完整
-  const isFormValid = form.name.trim() && form.section && form.alias.trim() && form.summary.trim() && form.detail.trim() && techStacks.length > 0
+  const isFormValid = form.name.trim() && form.techName.trim() && form.section && form.alias.trim() && form.summary.trim() && form.detail.trim() && techStacks.length > 0
 
-  // 提交表单，所有字段必须填写完整才能提交
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!isFormValid) return
     onSubmit({
       name: form.name.trim(),
+      techName: form.techName.trim(),
       alias: form.alias.trim(),
       summary: form.summary.trim(),
       detail: form.detail.trim(),
       section: form.section,
       techStacks,
+      slug: form.techName.trim()
     })
   }
 
@@ -244,25 +227,21 @@ function AddTagDrawer({ open, onClose, onSubmit, sections }) {
       <aside className={`${styles.drawer} ${open ? styles.drawerOpen : ''}`}>
         <div className={styles.drawerHeader}>
           <h2>添加文章</h2>
-          <button className={styles.drawerClose} onClick={onClose} aria-label="关闭">×</button>
+          <button className={styles.drawerClose} onClick={onClose} aria-label="关闭">x</button>
         </div>
         <form className={styles.drawerForm} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
             <label>文章标题 <span>*</span></label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={handleChange('name')}
-              placeholder="例如：React Hooks 入门"
-            />
+            <input type="text" value={form.name} onChange={handleChange('name')} placeholder="例如：React Hooks 入门" />
+          </div>
+          <div className={styles.formGroup}>
+            <label>技术名 <span>*</span></label>
+            <input type="text" value={form.techName} onChange={handleChange('techName')} placeholder="例如：hooks" />
           </div>
           <div className={styles.formGroup}>
             <label>所属专题 <span>*</span></label>
-            <select
-              value={form.section}
-              onChange={handleChange('section')}
-              className={styles.select}
-            >
+            <select value={form.section} onChange={handleChange('section')} className={styles.select}>
+              <option value="" disabled>请选择专题</option>
               {sections.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
@@ -270,30 +249,15 @@ function AddTagDrawer({ open, onClose, onSubmit, sections }) {
           </div>
           <div className={styles.formGroup}>
             <label>文章别名</label>
-            <input
-              type="text"
-              value={form.alias}
-              onChange={handleChange('alias')}
-              placeholder="例如：react-hooks"
-            />
+            <input type="text" value={form.alias} onChange={handleChange('alias')} placeholder="例如：react-hooks" />
           </div>
           <div className={styles.formGroup}>
             <label>简单介绍</label>
-            <textarea
-              value={form.summary}
-              onChange={handleChange('summary')}
-              placeholder="一两句话概括文章内容..."
-              rows={3}
-            />
+            <textarea value={form.summary} onChange={handleChange('summary')} placeholder="一两句话概括文章内容..." rows={3} />
           </div>
           <div className={styles.formGroup}>
             <label>详细介绍</label>
-            <textarea
-              value={form.detail}
-              onChange={handleChange('detail')}
-              placeholder="更详细地描述文章涉及的知识点、使用场景..."
-              rows={5}
-            />
+            <textarea value={form.detail} onChange={handleChange('detail')} placeholder="更详细地描述文章涉及的知识点、使用场景..." rows={5} />
           </div>
           <div className={styles.formGroup}>
             <label>使用的技术栈</label>
@@ -314,7 +278,7 @@ function AddTagDrawer({ open, onClose, onSubmit, sections }) {
                 {techStacks.map((tech) => (
                   <span className={styles.techItem} key={tech}>
                     {tech}
-                    <button type="button" onClick={() => removeTech(tech)} aria-label={`移除 ${tech}`}>×</button>
+                    <button type="button" onClick={() => removeTech(tech)} aria-label={`移除 ${tech}`}>x</button>
                   </span>
                 ))}
               </div>
@@ -353,12 +317,12 @@ function VirtualArticleList({ articles, onDelete }) {
           {visibleArticles.map((article, i) => {
             const index = startIndex + i
             return (
-              <div className={`${styles.tagRow} ${index % 2 === 0 ? styles.tagRowEven : ''}`} key={article.id} style={{ height: ROW_HEIGHT }}>
+              <div className={`${styles.tagRow} ${index % 2 === 0 ? styles.tagRowEven : ''}`} key={article.id ?? `article-${index}`} style={{ height: ROW_HEIGHT }}>
                 <div className={styles.tagInfo}>
                   <span className={styles.tagName}>{article.title}</span>
                   <span className={styles.tagCount}>{article.category}</span>
                 </div>
-                <button className={styles.deleteBtn} onClick={() => onDelete(article.title)} aria-label={`删除 ${article.title}`}>×</button>
+                <button className={styles.deleteBtn} onClick={() => onDelete(article.title)} aria-label={`删除 ${article.title}`}>x</button>
               </div>
             )
           })}

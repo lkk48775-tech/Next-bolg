@@ -1,36 +1,50 @@
 /**
  * 博客首页（Server Component）
  * 
- * 服务端渲染的部分：
- * - 头图区域（背景图 + 打字机文字 + 波浪装饰）
- * - 欢迎信息栏
- * 
- * 客户端渲染的部分（拆分到 HomePagination）：
- * - 文章卡片列表
- * - 分页按钮交互
- * 
- * 分页状态通过 URL 参数 ?page=2 管理，
- * 服务端根据参数计算当前页数据，传给客户端组件。
+ * 服务端渲染头图区域，文章列表由 HomePagination 客户端组件从后端获取数据渲染。
  */
 import { Suspense } from 'react'
 import Image from 'next/image'
-import { techSections } from '@/data/articleMetaData'
 import homeHeader from '@/assets/home-header-lite.webp'
 import styles from './Home.module.css'
 import HomePagination from '@/components/HomePagination'
+import { getHomeSections } from '@/lib/homeSections'
 
-export default async function Home({ searchParams }) {
-  // Next.js 15 中 searchParams 是 Promise，需要 await
-  const params = await searchParams
-  const currentPage = Number(params?.page) || 1
-  const PAGE_SIZE = 2
-  const pageCount = Math.ceil(techSections.length / PAGE_SIZE)
-  const start = (currentPage - 1) * PAGE_SIZE
-  const currentTechSections = techSections.slice(start, start + PAGE_SIZE)
+function HomePaginationFallback() {
+  return (
+    <div aria-hidden="true">
+      {Array.from({ length: 2 }, (_, sectionIndex) => (
+        <div className={styles.box} key={`home-fallback-section-${sectionIndex}`}>
+          <div className={styles.boxIntro}>
+            <h2 style={{ visibility: 'hidden' }}>Loading</h2>
+            <span style={{ visibility: 'hidden' }}>More</span>
+          </div>
+          <div className={styles.articleGrid}>
+            {Array.from({ length: 6 }, (_, cardIndex) => (
+              <div
+                key={`home-fallback-card-${sectionIndex}-${cardIndex}`}
+                style={{
+                  minHeight: 'clamp(150px, 18vw, 210px)',
+                  border: '1px solid rgb(235, 235, 235)',
+                  borderRadius: '12px',
+                  backgroundColor: '#fff',
+                  boxShadow: '4px 6px 10px rgba(0, 0, 0, .07)'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default async function Home() {
+  const sections = await getHomeSections()
 
   return (
     <>
-      {/* 头图区域：全宽背景图 + 打字机效果文字 + 波浪装饰 */}
+      {/* 头图区域 */}
       <div className={styles.header}>
         <Image
           className={styles.headerImage}
@@ -51,7 +65,6 @@ export default async function Home({ searchParams }) {
       {/* 主内容区 */}
       <div className={styles.main}>
         <div className={styles.right}>
-          {/* 欢迎信息栏 */}
           <div className={styles.textK}>
             <div className={styles.icons}>
               <svg className={styles.icon} aria-hidden="true">
@@ -61,13 +74,9 @@ export default async function Home({ searchParams }) {
             <span>欢迎访问：http://60.205.242.169</span>
           </div>
 
-          {/* 文章列表 + 分页（客户端交互部分） */}
-          <Suspense fallback={null}>
-            <HomePagination
-              currentTechSections={currentTechSections}
-              currentPage={currentPage}
-              pageCount={pageCount}
-            />
+          {/* 文章列表 + 分页（从后端获取数据） */}
+          <Suspense fallback={<HomePaginationFallback />}>
+            <HomePagination initialSections={sections} />
           </Suspense>
         </div>
       </div>

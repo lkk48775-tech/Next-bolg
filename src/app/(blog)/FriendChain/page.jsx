@@ -8,12 +8,20 @@
 import styles from './FriendChain.module.css'
 
 const friendLinks = [
-  { name: 'Nclxl Blog', url: 'https://example.com', desc: '记录前端、生活和项目实践的个人空间。', avatar: 'N', tags: ['前端', 'React'] },
-  { name: 'Blue Sakura', url: 'https://example.com', desc: '喜欢动画、设计和温柔交互的独立博客。', avatar: 'B', tags: ['设计', '生活'] },
-  { name: 'Code Garden', url: 'https://example.com', desc: '把复杂问题拆成清晰笔记，慢慢种一座代码花园。', avatar: 'C', tags: ['JavaScript', '笔记'] },
-  { name: 'Tiny Lab', url: 'https://example.com', desc: '实验一些有趣的小工具，也分享踩坑和复盘。', avatar: 'T', tags: ['工具', '实验'] },
-  { name: 'Moonlit Dev', url: 'https://example.com', desc: '夜里写代码，白天整理文章，持续输出技术内容。', avatar: 'M', tags: ['Vue', '工程化'] },
-  { name: 'Frontend Notes', url: 'https://example.com', desc: '聚焦 CSS、浏览器和性能优化的前端笔记站。', avatar: 'F', tags: ['CSS', '性能'] }
+  {
+    name: 'MyView Blog',
+    url: 'http://blog.myview.top/',
+    desc: '一个个人博客，记录前端知识、项目实践和算法学习。',
+    avatar: 'M',
+    tags: ['前端', '项目', '算法'],
+  },
+  {
+    name: 'Next.js',
+    url: 'https://nextjs.org/',
+    desc: 'React 全栈框架官网，提供 App Router、服务端渲染和部署等官方文档。',
+    avatar: 'N',
+    tags: ['Next.js', 'React', '文档'],
+  },
 ]
 
 const siteInfo = [

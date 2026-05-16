@@ -20,10 +20,12 @@
 import mysql from "mysql2/promise";
 
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "123456",
-  database: "blog_system",
+  // 只需要把硬编码的值替换为 process.env.XXX
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "ngmxlk_db",
+  password: process.env.DB_PASSWORD || "d4r2WZSWGTs6ti5J",
+  database: process.env.DB_NAME || "ngmxlk_db",
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,

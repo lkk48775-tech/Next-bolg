@@ -1,17 +1,10 @@
-/**
- * 搜索页面（Server Component）
- * 
- * 用 Suspense 包裹 SearchClient 客户端组件。
- * Suspense 是必须的，因为 SearchClient 内部使用了 useSearchParams()，
- * Next.js 15 要求使用 useSearchParams 的组件必须在 Suspense 边界内。
- */
-import { Suspense } from 'react'
 import SearchClient from '@/components/SearchClient'
+import { searchArticles } from '@/lib/searchArticles'
 
-export default function SearchPage() {
-  return (
-    <Suspense fallback={null}>
-      <SearchClient />
-    </Suspense>
-  )
+export default async function SearchPage({ searchParams }) {
+  const resolvedSearchParams = await searchParams
+  const keyword = resolvedSearchParams?.keyword || ''
+  const initialArticles = await searchArticles(keyword)
+
+  return <SearchClient initialKeyword={keyword} initialArticles={initialArticles} />
 }

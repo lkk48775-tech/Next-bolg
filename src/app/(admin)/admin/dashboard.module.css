@@ -14,7 +14,7 @@
 /* 统计卡片 */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 18px;
   margin-bottom: 28px;
 }
@@ -98,7 +98,7 @@
 /* 虚拟列表 */
 .virtualHeader {
   display: grid;
-  grid-template-columns: 1fr 100px 200px;
+  grid-template-columns: 1fr 100px;
   gap: 12px;
   padding: 12px 18px;
   border-bottom: 2px solid #e2e8f0;
@@ -138,7 +138,7 @@
 
 .virtualRow {
   display: grid;
-  grid-template-columns: 1fr 100px 200px;
+  grid-template-columns: 1fr 100px;
   gap: 12px;
   align-items: center;
   padding: 0 18px;
@@ -239,10 +239,5 @@
   .virtualHeader,
   .virtualRow {
     grid-template-columns: 1fr 80px;
-  }
-
-  .vhTags,
-  .vrTags {
-    display: none;
   }
 }

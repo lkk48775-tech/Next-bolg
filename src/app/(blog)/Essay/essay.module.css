@@ -187,12 +187,26 @@
   transform: translateY(-1px);
 }
 
+.actions .likedAction {
+  color: #e11d48;
+}
+
+.actions button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  transform: none;
+}
+
 :global(.darkTheme) .actions button {
   color: rgb(148, 163, 184);
 }
 
 :global(.darkTheme) .actions button:hover {
   color: rgb(125, 211, 252);
+}
+
+:global(.darkTheme) .actions .likedAction {
+  color: #fb7185;
 }
 
 @media (max-width: 760px) {
