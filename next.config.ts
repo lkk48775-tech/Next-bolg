@@ -13,6 +13,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // 允许这些扩展名作为页面文件
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
   images: {

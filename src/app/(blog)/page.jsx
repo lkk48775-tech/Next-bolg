@@ -3,6 +3,7 @@
  * 
  * 服务端渲染头图区域，文章列表由 HomePagination 客户端组件从后端获取数据渲染。
  */
+export const dynamic = "force-dynamic";
 import { Suspense } from 'react'
 import Image from 'next/image'
 import homeHeader from '@/assets/home-header-lite.webp'
