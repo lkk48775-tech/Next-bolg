@@ -254,6 +254,7 @@
   }
 }
 
+
 @media (prefers-reduced-motion: reduce) {
   .runner,
   .preson {
@@ -851,11 +852,6 @@ font-family: "Noto Serif SC", "SimSun", serif;}
     "HarmonyOS Sans SC",
     Arial,
     sans-serif;
-}
-
-.content > * {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 160px;
 }
 
 .content h3::before {

@@ -320,7 +320,12 @@
       gap: 10px;
       margin: 28px 0 10px;
 
+      a,
       button {
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         min-width: 38px;
         height: 36px;
         padding: 0 14px;
@@ -328,6 +333,7 @@
         border-radius: 999px;
         background-color: rgba(255, 255, 255, .88);
         color: rgb(64, 82, 96);
+        text-decoration: none;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
@@ -339,6 +345,7 @@
           color .2s;
       }
 
+      a:hover:not([aria-disabled='true']),
       button:hover:not(:disabled) {
         background-color: rgb(232, 248, 250);
         color: rgb(29, 159, 174);
@@ -346,10 +353,12 @@
         box-shadow: 0 12px 24px rgba(29, 159, 174, .14);
       }
 
-      button:disabled {
+      button:disabled,
+      .disabledPageLink {
         color: rgb(180, 190, 198);
         cursor: not-allowed;
         box-shadow: none;
+        pointer-events: none;
       }
 
       .activePage {
@@ -357,6 +366,13 @@
         background: linear-gradient(135deg, rgb(29, 159, 174), rgb(96, 165, 250));
         color: #fff;
       }
+    }
+
+    .paginationHint {
+      margin-top: 18px;
+      color: rgb(99, 99, 99);
+      font-size: 14px;
+      text-align: center;
     }
   }
 }

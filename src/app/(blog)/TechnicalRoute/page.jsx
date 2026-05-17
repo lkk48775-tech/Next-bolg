@@ -7,6 +7,7 @@ import Link from 'next/link'
 import styles from './TechnicalRoute.module.css'
 import ArchiveShell from '@/components/ArchiveShell'
 import ArchiveTimeline from './ArchiveTimeline'
+import { getArchiveArticles } from '@/lib/archiveArticles'
 
 const navItems = [
   { label: '首页', to: '/' },
@@ -16,7 +17,11 @@ const navItems = [
   { label: '随笔', to: '/Essay' }
 ]
 
-export default function TechnicalRoutePage() {
+export const revalidate = 300
+
+export default async function TechnicalRoutePage() {
+  const articles = await getArchiveArticles()
+
   return (
     <>
       <div className={styles.hly}></div>
@@ -43,7 +48,7 @@ export default function TechnicalRoutePage() {
         </aside>
 
         {/* 归档时间线：从后端获取数据 */}
-        <ArchiveTimeline />
+        <ArchiveTimeline articles={articles} />
       </ArchiveShell>
     </>
   )

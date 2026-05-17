@@ -1,46 +1,119 @@
 'use client'
 
-import { useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import ArticleCard from '@/components/ArticleCard'
 import styles from '@/app/(blog)/Home.module.css'
 
 const PAGE_SIZE = 2
 
-export default function HomePagination({ initialSections = [] }) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const currentPage = Number(searchParams.get('page')) || 1
+const getInitialPageFromLocation = () => {
+  if (typeof window === 'undefined') return 1
 
-  const validSections = useMemo(() => {
-    return initialSections.filter((section) => section.articles && section.articles.length >= 4)
-  }, [initialSections])
+  const page = Number(new URLSearchParams(window.location.search).get('page')) || 1
+  return Math.max(page, 1)
+}
 
-  const pageCount = Math.max(1, Math.ceil(validSections.length / PAGE_SIZE))
+export default function HomePagination({
+  initialSections = [],
+  initialPage = 1,
+  initialPageCount = 1,
+}) {
+  const [sections, setSections] = useState(initialSections)
+  const [pageCount, setPageCount] = useState(initialPageCount)
+  const [currentPage, setCurrentPage] = useState(initialPage)
+  const [loading, setLoading] = useState(false)
 
-  const currentSections = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE
-    return validSections.slice(start, start + PAGE_SIZE)
-  }, [validSections, currentPage])
+  useEffect(() => {
+    setSections(initialSections)
+    setPageCount(initialPageCount)
+    setCurrentPage(initialPage)
+  }, [initialPage, initialPageCount, initialSections])
 
-  const changePage = (nextPage) => {
+  useEffect(() => {
+    const pageFromUrl = getInitialPageFromLocation()
+
+    if (pageFromUrl === initialPage) return
+
+    let cancelled = false
+
+    const fetchPage = async () => {
+      setCurrentPage(pageFromUrl)
+      setLoading(true)
+
+      try {
+        const response = await fetch(`/api/blog/HomePagination?page=${pageFromUrl}&pageSize=${PAGE_SIZE}`, {
+          cache: 'no-store',
+        })
+        const payload = await response.json()
+
+        if (!response.ok || payload.code !== 200) {
+          throw new Error(payload.msg || '加载首页内容失败')
+        }
+
+        if (cancelled) return
+
+        setSections(payload.data.sections || [])
+        setPageCount(payload.data.pageCount || 1)
+      } catch (error) {
+        if (!cancelled) {
+          console.error(error)
+          setSections([])
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void fetchPage()
+
+    return () => {
+      cancelled = true
+    }
+  }, [initialPage])
+
+  const changePage = async (nextPage) => {
     const safePage = Math.min(Math.max(nextPage, 1), pageCount)
-    const params = new URLSearchParams()
-    if (safePage !== 1) params.set('page', String(safePage))
-    router.push(`/?${params.toString()}`, { scroll: false })
-  }
+    if (safePage === currentPage) return
 
-  const goToSearch = (categoryName) => {
-    router.push(`/search?keyword=${encodeURIComponent(categoryName)}`)
+    setLoading(true)
+
+    try {
+      const response = await fetch(`/api/blog/HomePagination?page=${safePage}&pageSize=${PAGE_SIZE}`, {
+        cache: 'no-store',
+      })
+      const payload = await response.json()
+
+      if (!response.ok || payload.code !== 200) {
+        throw new Error(payload.msg || '加载首页内容失败')
+      }
+
+      setSections(payload.data.sections || [])
+      setPageCount(payload.data.pageCount || 1)
+      setCurrentPage(payload.data.page || safePage)
+
+      const url = payload.data.page > 1 ? `/?page=${payload.data.page}` : '/'
+      window.history.pushState(null, '', url)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <>
-      {currentSections.map((section) => (
+      {sections.map((section) => (
         <div className={styles.box} key={section.category}>
           <div className={styles.boxIntro}>
             <h2>{section.category}</h2>
-            <span onClick={() => goToSearch(section.category)} style={{ cursor: 'pointer' }}>更多</span>
+            <span
+              onClick={() => { window.location.href = `/search?keyword=${encodeURIComponent(section.category)}` }}
+              style={{ cursor: 'pointer' }}
+            >
+              更多
+            </span>
           </div>
           <div className={styles.articleGrid}>
             {section.articles.slice(0, 6).map((article) => (
@@ -59,25 +132,33 @@ export default function HomePagination({ initialSections = [] }) {
         </div>
       ))}
 
-      {validSections.length > PAGE_SIZE && (
+      {loading && (
+        <div className={styles.paginationHint} aria-live="polite">
+          页面内容加载中...
+        </div>
+      )}
+
+      {pageCount > 1 && (
         <div className={styles.pagination}>
-          <button type="button" disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>
+          <button type="button" disabled={currentPage === 1 || loading} onClick={() => void changePage(currentPage - 1)}>
             上一页
           </button>
           {Array.from({ length: pageCount }, (_, index) => {
             const page = index + 1
+
             return (
               <button
                 type="button"
                 className={currentPage === page ? styles.activePage : ''}
+                disabled={loading}
                 key={page}
-                onClick={() => changePage(page)}
+                onClick={() => void changePage(page)}
               >
                 {page}
               </button>
             )
           })}
-          <button type="button" disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)}>
+          <button type="button" disabled={currentPage === pageCount || loading} onClick={() => void changePage(currentPage + 1)}>
             下一页
           </button>
         </div>

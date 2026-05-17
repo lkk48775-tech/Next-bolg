@@ -2,72 +2,74 @@ import styles from './react.module.css';
 import CodeWindow from '@/components/CodeWindow'
 
 export const articleMeta = {
-  slug: 'react-hooks',
-  title: '函数组件中的状态逻辑',
+  slug: 'react-controlled-form',
+  title: '表单由状态驱动',
   category: 'React'
 }
 
 <div className={styles.content}>
 
-## 函数组件中的状态逻辑
+## 表单由状态驱动
 
-> <span>Hooks</span> 用来在函数组件中组织状态、副作用、引用和可复用逻辑。
+> <span>受控表单</span>让输入框的值由 React 状态控制，便于校验、联动和重置。
 
 ### 适用场景
 
-- 请求数据
-- 监听滚动
-- 控制弹窗
-- 抽取复用逻辑
+- 登录表单
+- 搜索条件
+- 编辑资料
+- 发布文章
 
 ### 技术点总览
 
 | 技术点 | 主要作用 |
 | --- | --- |
-| useState 管理状态 | 会影响视图的数据适合放在 useState 中。 |
-| useEffect 处理副作用 | 请求、事件监听和定时器都属于副作用。 |
-| 自定义 Hook 复用逻辑 | 多个组件都要用的状态逻辑可以抽成自定义 Hook。 |
+| value 和 onChange | 输入框显示来自状态，输入时再更新状态。 |
+| 多个字段统一管理 | 字段多时可以用对象保存表单状态。 |
+| 提交前校验 | 提交时集中判断字段是否合法。 |
 
 ### 分批介绍
 
-#### useState 管理状态
+#### value 和 onChange
 
-会影响视图的数据适合放在 <span>useState</span> 中。
+输入框显示来自状态，输入时再更新状态。
 
 <CodeWindow
   lang="jsx"
   code={`
-const [count, setCount] = useState(0)
+const [name, setName] = useState('')
 
-setCount((value) => value + 1)
+<input value={name} onChange={(e) => setName(e.target.value)} />
 `}
 />
 
-#### useEffect 处理副作用
+#### 多个字段统一管理
 
-请求、事件监听和定时器都属于副作用。
+字段多时可以用对象保存表单状态。
 
 <CodeWindow
   lang="jsx"
   code={`
-useEffect(() => {
-  const onScroll = () => setTop(window.scrollY)
-  window.addEventListener('scroll', onScroll)
-  return () => window.removeEventListener('scroll', onScroll)
-}, [])
+const [form, setForm] = useState({ username: '', password: '' })
+
+function update(key, value) {
+  setForm((prev) => ({ ...prev, [key]: value }))
+}
 `}
 />
 
-#### 自定义 Hook 复用逻辑
+#### 提交前校验
 
-多个组件都要用的状态逻辑可以抽成<span>自定义 Hook</span>。
+提交时集中判断字段是否合法。
 
 <CodeWindow
   lang="jsx"
   code={`
-function useBoolean(defaultValue = false) {
-  const [value, setValue] = useState(defaultValue)
-  return [value, () => setValue(true), () => setValue(false)]
+function submit() {
+  if (!form.username) {
+    setError('请输入用户名')
+    return
+  }
 }
 `}
 />
@@ -80,6 +82,6 @@ function useBoolean(defaultValue = false) {
 
 ### 小结
 
-函数组件中的状态逻辑 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
+表单由状态驱动 的重点不是记住某个 API，而是理解它解决的问题、适合的场景以及和其它技术点之间的关系。把每个小知识点拆开看，再组合到真实业务里，代码会更有规律，也更容易维护。
 
 </div>

@@ -1,3 +1,5 @@
+ 'use client'
+
 /**
  * 代码窗口组件（Client Component - 通过 memo 优化）
  * 

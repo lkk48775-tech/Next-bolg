@@ -3,13 +3,26 @@ import { HttpsProxyAgent } from "https-proxy-agent"
 import https from "node:https"
 import db from "@/lib/db"
 
-const githubProxyUrl = (
-  process.env.GITHUB_OAUTH_PROXY ||
-  process.env.HTTPS_PROXY ||
-  process.env.HTTP_PROXY ||
-  process.env.ALL_PROXY ||
-  ""
-).trim()
+const appEnv = process.env.APP_ENV || (process.env.NODE_ENV === "production" ? "production" : "local")
+const isProductionEnv = appEnv === "production"
+
+const authBaseUrl = isProductionEnv
+  ? process.env.NEXTAUTH_URL_PRODUCTION || process.env.NEXTAUTH_URL || "https://ngmxlk.xyz"
+  : process.env.NEXTAUTH_URL_LOCAL || process.env.NEXTAUTH_URL || "http://localhost:3000"
+
+const githubClientId = isProductionEnv
+  ? process.env.GITHUB_ID_PRODUCTION || process.env.GITHUB_ID
+  : process.env.GITHUB_ID_LOCAL || process.env.GITHUB_ID
+
+const githubClientSecret = isProductionEnv
+  ? process.env.GITHUB_SECRET_PRODUCTION || process.env.GITHUB_SECRET
+  : process.env.GITHUB_SECRET_LOCAL || process.env.GITHUB_SECRET
+
+process.env.NEXTAUTH_URL = authBaseUrl
+
+// 修复1：强制禁用自动代理检测，阿里云服务器不需要代理
+const githubProxyUrl = ""
+// 如果你以后确实需要代理，再手动设置GITHUB_OAUTH_PROXY环境变量
 
 const githubHttpTimeout = Number(process.env.GITHUB_OAUTH_TIMEOUT) || 15000
 const githubProxyAgent = githubProxyUrl ? new HttpsProxyAgent(githubProxyUrl) : undefined
@@ -17,6 +30,8 @@ const githubProxyAgent = githubProxyUrl ? new HttpsProxyAgent(githubProxyUrl) : 
 const requestGithubJson = ({ url, method = "GET", headers = {}, body = null }) =>
   new Promise((resolve, reject) => {
     const payload = body ? body.toString() : null
+
+    console.log(`[GitHub Request] ${method} ${url}`) // 添加调试日志
 
     const req = https.request(
       url,
@@ -37,17 +52,22 @@ const requestGithubJson = ({ url, method = "GET", headers = {}, body = null }) =
         res.on("data", (chunk) => chunks.push(chunk))
         res.on("end", () => {
           const text = Buffer.concat(chunks).toString("utf8")
+          console.log(`[GitHub Response] Status: ${res.statusCode}, Body: ${text.slice(0, 500)}`) // 添加调试日志
+
           let data = {}
 
           try {
             data = text ? JSON.parse(text) : {}
-          } catch {
+          } catch (e) {
+            console.error(`[GitHub JSON Parse Error] ${e.message}, Raw text: ${text}`)
             reject(new Error(`GitHub returned a non-JSON response: ${text.slice(0, 200)}`))
             return
           }
 
           if (res.statusCode < 200 || res.statusCode >= 300) {
-            reject(new Error(data.error_description || data.message || `GitHub request failed: ${res.statusCode}`))
+            const errorMsg = data.error_description || data.message || `GitHub request failed: ${res.statusCode}`
+            console.error(`[GitHub API Error] ${errorMsg}`)
+            reject(new Error(errorMsg))
             return
           }
 
@@ -57,9 +77,14 @@ const requestGithubJson = ({ url, method = "GET", headers = {}, body = null }) =
     )
 
     req.on("timeout", () => {
-      req.destroy(new Error(`GitHub request timed out after ${githubHttpTimeout}ms`))
+      const error = new Error(`GitHub request timed out after ${githubHttpTimeout}ms`)
+      console.error(`[GitHub Timeout] ${error.message}`)
+      req.destroy(error)
     })
-    req.on("error", reject)
+    req.on("error", (error) => {
+      console.error(`[GitHub Network Error] ${error.message}`)
+      reject(error)
+    })
 
     if (payload) {
       req.write(payload)
@@ -69,8 +94,8 @@ const requestGithubJson = ({ url, method = "GET", headers = {}, body = null }) =
   })
 
 const githubProvider = GitHubProvider({
-  clientId: process.env.GITHUB_ID,
-  clientSecret: process.env.GITHUB_SECRET,
+  clientId: githubClientId,
+  clientSecret: githubClientSecret,
   httpOptions: {
     timeout: githubHttpTimeout,
   },
@@ -79,11 +104,15 @@ const githubProvider = GitHubProvider({
 githubProvider.token = {
   url: "https://github.com/login/oauth/access_token",
   async request({ provider, params }) {
+    // 修复2：强制使用正确的HTTPS回调地址，不依赖NextAuth.js自动生成
+    const correctCallbackUrl = `${authBaseUrl}/api/auth/callback/github`
+    console.log(`[OAuth Callback] Using URL: ${correctCallbackUrl}`)
+
     const body = new URLSearchParams({
       client_id: provider.clientId,
       client_secret: provider.clientSecret,
       code: params.code,
-      redirect_uri: provider.callbackUrl,
+      redirect_uri: correctCallbackUrl, // 使用我们自己生成的正确地址
     })
 
     const tokens = await requestGithubJson({
@@ -163,11 +192,12 @@ export const ensureUserRecord = async ({ token = {}, account = null, profile = n
 }
 
 export const authOptions = {
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // 强制开启调试模式，生产环境也先开着，解决问题后再关闭
   providers: [githubProvider],
+  trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn() {
-      // 先允许 OAuth 登录成功，避免数据库写入异常直接打断回调流程。
       return true
     },
     async jwt({ token, account, profile, user }) {

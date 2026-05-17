@@ -1,8 +1,11 @@
-import { getHomeSections } from '@/lib/homeSections'
+import { getHomeSectionsPage } from '@/lib/homeSections'
 
-export async function GET() {
+export async function GET(req) {
   try {
-    const data = await getHomeSections()
+    const { searchParams } = new URL(req.url)
+    const page = Number(searchParams.get('page')) || 1
+    const pageSize = Number(searchParams.get('pageSize')) || 2
+    const data = await getHomeSectionsPage(page, pageSize)
 
     return Response.json({
       code: 200,

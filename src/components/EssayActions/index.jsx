@@ -1,14 +1,3 @@
-/**
- * 随笔操作按钮组件（Client Component）
- * 
- * 从随笔页 Server Component 中拆出来的交互部分。
- * 只有"分享"按钮需要调用浏览器 API（navigator.share / navigator.clipboard），
- * 所以单独作为客户端组件。
- * 
- * Props:
- * - title: 随笔标题（用于分享数据）
- * - desc: 随笔描述（用于分享数据）
- */
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -31,7 +20,36 @@ const fetchJson = async (url, options = {}) => {
   return payload
 }
 
-export default function EssayActions({ title, desc, articleId = null, likeCount = 0, liked = false }) {
+function ShareButton({ title, desc }) {
+  const handleShare = async () => {
+    const shareData = { title, text: desc, url: window.location.href }
+
+    if (navigator.share) {
+      await navigator.share(shareData)
+      return
+    }
+
+    await navigator.clipboard.writeText(window.location.href)
+  }
+
+  return (
+    <button type="button" onClick={handleShare}>
+      <span>分享</span>
+    </button>
+  )
+}
+
+function ShareOnlyActions({ title, desc }) {
+  return (
+    <div className={styles.actions}>
+      <button type="button"><span>点赞</span></button>
+      <button type="button"><span>收藏</span></button>
+      <ShareButton title={title} desc={desc} />
+    </div>
+  )
+}
+
+function ArticleActions({ title, desc, articleId, likeCount, liked }) {
   const { status } = useSession()
   const [currentLikeCount, setCurrentLikeCount] = useState(likeCount)
   const [currentLiked, setCurrentLiked] = useState(liked)
@@ -73,30 +91,34 @@ export default function EssayActions({ title, desc, articleId = null, likeCount 
     }
   }
 
-  // 分享功能：优先使用系统分享 API，不支持时复制链接到剪贴板
-  const handleShare = async () => {
-    const shareData = { title, text: desc, url: window.location.href }
-
-    if (navigator.share) {
-      await navigator.share(shareData)
-      return
-    }
-
-    await navigator.clipboard.writeText(window.location.href)
-  }
-
   return (
     <div className={styles.actions}>
       <button
         className={currentLiked ? styles.likedAction : ''}
         type="button"
         disabled={pending}
-        onClick={articleId ? handleLike : undefined}
+        onClick={handleLike}
       >
-        <span>{currentLiked ? '已喜欢' : '点赞'}{articleId ? ` ${currentLikeCount}` : ''}</span>
+        <span>{currentLiked ? '已喜欢' : '点赞'} {currentLikeCount}</span>
       </button>
       <button type="button"><span>收藏</span></button>
-      <button type="button" onClick={handleShare}><span>分享</span></button>
+      <ShareButton title={title} desc={desc} />
     </div>
+  )
+}
+
+export default function EssayActions({ title, desc, articleId = null, likeCount = 0, liked = false }) {
+  if (!articleId) {
+    return <ShareOnlyActions title={title} desc={desc} />
+  }
+
+  return (
+    <ArticleActions
+      title={title}
+      desc={desc}
+      articleId={articleId}
+      likeCount={likeCount}
+      liked={liked}
+    />
   )
 }
