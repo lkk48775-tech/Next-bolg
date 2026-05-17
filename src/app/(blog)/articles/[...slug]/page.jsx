@@ -10,8 +10,13 @@ import EssayActions from '@/components/EssayActions'
 import articleHero from '@/assets/1-lite.webp'
 import styles from './ArticleDetail.module.css'
 import { getArticleBySlug, normalizeArticleMdx } from '@/lib/articleDetail'
+import { getArticleStaticParams } from '@/lib/articleStaticParams'
 
 export const revalidate = 300
+
+export async function generateStaticParams() {
+  return getArticleStaticParams()
+}
 
 const mdxComponents = {
   pre: ({ children }) => {

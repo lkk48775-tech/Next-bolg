@@ -12,9 +12,9 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useBlogContext } from '@/context/BlogContext'
+import HoverPrefetchLink from '@/components/HoverPrefetchLink'
 import axios from 'axios'
 import styles from '@/app/(blog)/search/search.module.css'
 
@@ -179,7 +179,7 @@ export default function SearchClient({ initialKeyword = '', initialArticles = []
                 // 解析技术标签（数据库存的是 JSON 字符串）
                 const tags = (() => { try { return JSON.parse(article.tech_stack || '[]') } catch { return [] } })()
                 return (
-                  <Link
+                  <HoverPrefetchLink
                     className={styles.resultItem}
                     href={`/articles/${(article.category_name || '').toLowerCase()}/${article.slug}`}
                     key={article.id}
@@ -192,7 +192,7 @@ export default function SearchClient({ initialKeyword = '', initialArticles = []
                         {tags.map((tag) => (<span key={`${article.id}-${tag}`}>{tag}</span>))}
                       </div>
                     </div>
-                  </Link>
+                  </HoverPrefetchLink>
                 )
               })}
             </div>

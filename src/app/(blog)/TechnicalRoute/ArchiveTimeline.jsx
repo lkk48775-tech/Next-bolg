@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import HoverPrefetchLink from '@/components/HoverPrefetchLink'
 import styles from './TechnicalRoute.module.css'
 
 export default function ArchiveTimeline({ articles = [] }) {
@@ -32,14 +32,14 @@ export default function ArchiveTimeline({ articles = [] }) {
             <h3>{year}</h3>
             <div className={styles.archiveList}>
               {archiveGroups[year].map((article) => (
-                <Link
+                <HoverPrefetchLink
                   className={styles.archiveEntry}
                   href={`/articles/${(article.category_name || '').toLowerCase()}/${article.slug}`}
                   key={article.id}
                 >
                   <time>{article.dateStr}</time>
                   <span>{article.description || article.title}</span>
-                </Link>
+                </HoverPrefetchLink>
               ))}
             </div>
           </section>

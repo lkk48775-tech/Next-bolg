@@ -78,6 +78,16 @@ li {
 .noHoverLayer:hover {
   background-color: transparent;
 }
+
+.pendingLink {
+  opacity: .72;
+  transform: translateY(1px);
+}
+
+.pendingLink .transtion {
+  width: 100% !important;
+}
+
 .scrolledNav {
   z-index: 1200;
   background-color: var(--blog-nav-scrolled-bg, rgba(255, 255, 255, .82));
@@ -199,6 +209,11 @@ li {
   background: linear-gradient(90deg, rgba(56, 189, 248, .15), transparent);
   color: #38bdf8;
   font-weight: 800;
+}
+
+.pendingLink.drawerLink {
+  background-color: rgba(148, 163, 184, .12);
+  color: #f8fafc;
 }
 
 .drawerLinkActive::before {

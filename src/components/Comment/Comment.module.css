@@ -52,6 +52,11 @@
   line-height: 1;
 }
 
+.messageBox {
+  position: relative;
+  z-index: 1;
+}
+
 .titleIcon {
   display: inline-grid;
   place-items: center;
@@ -871,4 +876,94 @@
     width: 100%;
     justify-content: flex-end;
   }
+}
+
+:global(.darkTheme) .comment {
+  color: var(--blog-text) !important;
+  --comment-accent: rgb(56, 189, 248);
+  --comment-accent-strong: rgb(14, 165, 233);
+  --comment-accent-soft: rgba(14, 165, 233, .14);
+  --comment-accent-fade: rgba(56, 189, 248, .18);
+  --comment-accent-surface: color-mix(in srgb, var(--comment-accent) 12%, rgba(15, 23, 42, .94));
+  --comment-accent-surface-strong: color-mix(in srgb, var(--comment-accent) 18%, rgba(15, 23, 42, .96));
+  --comment-accent-shell: color-mix(in srgb, var(--comment-accent) 10%, rgba(15, 23, 42, .98));
+  --comment-accent-panel: color-mix(in srgb, var(--comment-accent) 8%, rgba(15, 23, 42, .95));
+  --comment-accent-panel-strong: color-mix(in srgb, var(--comment-accent) 14%, rgba(15, 23, 42, .92));
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, .94), var(--comment-accent-shell) 44%, rgba(30, 41, 59, .92)) !important;
+  border-color: color-mix(in srgb, var(--comment-accent) 16%, rgba(148, 163, 184, .24)) !important;
+}
+
+:global(.darkTheme) .messageTitle,
+:global(.darkTheme) .messageTitle span,
+:global(.darkTheme) .listHeader,
+:global(.darkTheme) .feedbackCard,
+:global(.darkTheme) .actionMessage,
+:global(.darkTheme) .author time,
+:global(.darkTheme) .replyMeta,
+:global(.darkTheme) .replyToolbar,
+:global(.darkTheme) .feedbackCard p {
+  color: var(--blog-text) !important;
+}
+
+:global(.darkTheme) .editor {
+  border-color: color-mix(in srgb, var(--comment-accent) 18%, rgba(148, 163, 184, .22)) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .98), var(--comment-accent-panel)) !important;
+  box-shadow:
+    inset 0 2px 8px rgba(255, 255, 255, .02),
+    0 10px 24px color-mix(in srgb, var(--comment-accent) 10%, rgba(0, 0, 0, .18)) !important;
+}
+
+:global(.darkTheme) .editor textarea,
+:global(.darkTheme) .replyBox textarea {
+  color: var(--blog-text) !important;
+}
+
+:global(.darkTheme) .editor textarea::placeholder,
+:global(.darkTheme) .replyBox textarea::placeholder {
+  color: var(--blog-muted) !important;
+}
+
+:global(.darkTheme) .userBadge,
+:global(.darkTheme) .commentItem,
+:global(.darkTheme) .replyItem,
+:global(.darkTheme) .replyBox,
+:global(.darkTheme) .feedbackCard {
+  border-color: color-mix(in srgb, var(--comment-accent) 14%, rgba(148, 163, 184, .24)) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .96), var(--comment-accent-panel-strong)) !important;
+}
+
+:global(.darkTheme) .listHeader {
+  border-color: color-mix(in srgb, var(--comment-accent) 14%, rgba(148, 163, 184, .24)) !important;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--comment-accent) 18%, rgba(15, 23, 42, .84)),
+      color-mix(in srgb, var(--comment-accent-strong) 10%, rgba(30, 41, 59, .82))
+    ) !important;
+}
+
+:global(.darkTheme) .commentMain > p,
+:global(.darkTheme) .replyMain p,
+:global(.darkTheme) .replyBox textarea {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .94), var(--comment-accent-surface)) !important;
+  color: var(--blog-text) !important;
+}
+
+:global(.darkTheme) .userBadgeName,
+:global(.darkTheme) .replyToggle,
+:global(.darkTheme) .commentActions,
+:global(.darkTheme) .replyMeta time {
+  color: var(--blog-muted) !important;
+}
+
+:global(.darkTheme) .loginButton,
+:global(.darkTheme) .replyTarget,
+:global(.darkTheme) .replyBoxHeader span {
+  border-color: color-mix(in srgb, var(--comment-accent) 18%, rgba(148, 163, 184, .24)) !important;
+  background: var(--comment-accent-soft) !important;
+  color: var(--comment-accent-strong) !important;
 }

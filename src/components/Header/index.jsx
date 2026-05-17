@@ -28,6 +28,7 @@ const navLinks = [
 
 function Header({ scrollTop, isVisible = true }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [pendingHref, setPendingHref] = useState('')
   const pathname = usePathname()
 
   // 动态加载 iconfont.js（SVG symbol 图标），避免 SSR 时访问 document
@@ -38,7 +39,18 @@ function Header({ scrollTop, isVisible = true }) {
   // 路由切换时自动关闭抽屉
   useEffect(() => {
     setDrawerOpen(false)
+    setPendingHref('')
   }, [pathname])
+
+  useEffect(() => {
+    if (!pendingHref) return undefined
+
+    const timer = window.setTimeout(() => {
+      setPendingHref('')
+    }, 1200)
+
+    return () => window.clearTimeout(timer)
+  }, [pendingHref])
 
   // 抽屉打开时禁止 body 滚动
   useEffect(() => {
@@ -63,12 +75,26 @@ function Header({ scrollTop, isVisible = true }) {
     isArticleDetail ? styles.noHoverLayer : '',           // 特定页面不加 hover 背景
   ].filter(Boolean).join(' ')
 
+  const handleLinkClick = (href) => {
+    if (href === pathname) {
+      setPendingHref('')
+      return
+    }
+
+    setPendingHref(href)
+  }
+
   return (
     <>
       {/* 顶部导航栏 */}
       <ul className={headerClassName}>
         {navLinks.map((link) => (
-          <Link href={link.href} className={styles.options} key={link.href}>
+          <Link
+            href={link.href}
+            className={`${styles.options} ${pendingHref === link.href ? styles.pendingLink : ''}`}
+            key={link.href}
+            onClick={() => handleLinkClick(link.href)}
+          >
             <svg className={styles.icon} aria-hidden="true">
               <use href={link.icon}></use>
             </svg>
@@ -105,7 +131,10 @@ function Header({ scrollTop, isVisible = true }) {
               href={link.href}
               className={`${styles.drawerLink} ${pathname === link.href ? styles.drawerLinkActive : ''}`}
               key={link.href}
-              onClick={() => setDrawerOpen(false)}
+              onClick={() => {
+                handleLinkClick(link.href)
+                setDrawerOpen(false)
+              }}
             >
               <svg className={styles.drawerIcon} aria-hidden="true">
                 <use href={link.icon}></use>

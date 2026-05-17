@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import ArticleCard from '@/components/ArticleCard'
 import styles from '@/app/(blog)/Home.module.css'
 
@@ -18,6 +19,7 @@ export default function HomePagination({
   initialPage = 1,
   initialPageCount = 1,
 }) {
+  const router = useRouter()
   const [sections, setSections] = useState(initialSections)
   const [pageCount, setPageCount] = useState(initialPageCount)
   const [currentPage, setCurrentPage] = useState(initialPage)
@@ -109,7 +111,12 @@ export default function HomePagination({
           <div className={styles.boxIntro}>
             <h2>{section.category}</h2>
             <span
-              onClick={() => { window.location.href = `/search?keyword=${encodeURIComponent(section.category)}` }}
+              onMouseEnter={() => {
+                router.prefetch(`/search?keyword=${encodeURIComponent(section.category)}`)
+              }}
+              onClick={() => {
+                router.push(`/search?keyword=${encodeURIComponent(section.category)}`)
+              }}
               style={{ cursor: 'pointer' }}
             >
               更多
