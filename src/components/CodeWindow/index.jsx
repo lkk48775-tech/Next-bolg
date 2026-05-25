@@ -8,14 +8,13 @@
  * 1. 自定义语法高亮（不依赖外部库，手写 tokenizer）
  * 2. 行号显示
  * 3. 一键复制代码
- * 4. 懒加载：使用 IntersectionObserver，进入视口 420px 范围内才渲染高亮
- * 5. 支持 JS 和 CSS 两种语法的 token 分类
+ * 4. 支持 JS 和 CSS 两种语法的 token 分类
  * 
  * Props:
  * - lang: 语言标识（显示在窗口标题栏）
  * - code: 代码文本内容
  */
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import styles from './Codewindow.module.css'
 
 const jsKeywords = new Set([
@@ -166,42 +165,14 @@ function getTokens(line, normalizedLang) {
 
 function CodeWindow({ lang = 'CODE', code = '' }) {
   const [copied, setCopied] = useState(false)
-  const [shouldRenderCode, setShouldRenderCode] = useState(false)
-  const rootRef = useRef(null)
 
   const codeText = useMemo(() => code.trim(), [code])
   const lines = useMemo(() => codeText.split('\n'), [codeText])
   const normalizedLang = useMemo(() => lang.toLowerCase(), [lang])
-  const highlightedLines = useMemo(() => {
-    if (!shouldRenderCode) {
-      return []
-    }
-
-    return lines.map((line) => getTokens(line, normalizedLang))
-  }, [lines, normalizedLang, shouldRenderCode])
-
-  useEffect(() => {
-    const rootNode = rootRef.current
-
-    if (!rootNode) {
-      return undefined
-    }
-
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setShouldRenderCode(true)
-        observer.disconnect()
-      }
-    }, {
-      rootMargin: '420px 0px'
-    })
-
-    observer.observe(rootNode)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [])
+  const highlightedLines = useMemo(
+    () => lines.map((line) => getTokens(line, normalizedLang)),
+    [lines, normalizedLang]
+  )
 
   const handleCopy = async () => {
     try {
@@ -217,7 +188,7 @@ function CodeWindow({ lang = 'CODE', code = '' }) {
   }
 
   return (
-    <div className={styles.codeWindow} ref={rootRef}>
+    <div className={styles.codeWindow}>
       <div className={styles.codeHeader}>
         <div className={styles.dots}>
           <span></span>
@@ -251,32 +222,21 @@ function CodeWindow({ lang = 'CODE', code = '' }) {
       </div>
 
       <pre className={styles.codeBody}>
-        {shouldRenderCode ? (
-          lines.map((line, index) => (
-            <div className={styles.codeLine} key={index}>
-              <span className={styles.lineNumber}>{index + 1}</span>
-              <code>
-                {highlightedLines[index].map((token, tokenIndex, tokens) => (
-                  <span
-                    className={getTokenClass(token.type, token.value, tokenIndex, tokens, normalizedLang)}
-                    key={`${index}-${tokenIndex}`}
-                  >
-                    {token.value}
-                  </span>
-                ))}
-              </code>
-            </div>
-          ))
-        ) : (
-          <div className={styles.codeSkeleton}>
-            {lines.slice(0, 4).map((line, index) => (
-              <div className={styles.codeLine} key={index}>
-                <span className={styles.lineNumber}>{index + 1}</span>
-                <code>{line}</code>
-              </div>
-            ))}
+        {lines.map((line, index) => (
+          <div className={styles.codeLine} key={index}>
+            <span className={styles.lineNumber}>{index + 1}</span>
+            <code>
+              {highlightedLines[index].map((token, tokenIndex, tokens) => (
+                <span
+                  className={getTokenClass(token.type, token.value, tokenIndex, tokens, normalizedLang)}
+                  key={`${index}-${tokenIndex}`}
+                >
+                  {token.value}
+                </span>
+              ))}
+            </code>
           </div>
-        )}
+        ))}
       </pre>
     </div>
   )

@@ -5,6 +5,7 @@ import { useBlogContext } from '@/context/BlogContext'
 import styles from './ArticleDetail.module.css'
 
 const ARTICLE_THEME_STORAGE_KEY = 'article-color-theme'
+const TOC_ACTIVE_OFFSET = 112
 
 const articleThemes = [
   { key: 'classic', label: '经典' },
@@ -18,14 +19,12 @@ const getStoredArticleTheme = () => {
   return articleThemes.some((theme) => theme.key === storedTheme) ? storedTheme : 'classic'
 }
 
-export default function ArticleDetailClient({ hero, typingText, children }) {
+export default function ArticleDetailClient({ hero, typingText, tocItems = [], comments = null, children }) {
   const { scrollTop = 0 } = useBlogContext()
   const [typedDesc, setTypedDesc] = useState('')
-  const [tocItems, setTocItems] = useState([])
-  const [activeHeading, setActiveHeading] = useState('')
+  const [activeHeading, setActiveHeading] = useState(tocItems[0]?.id || '')
   const [isPictureVisible, setIsPictureVisible] = useState(true)
   const [articleTheme, setArticleTheme] = useState('classic')
-  const contentRef = useRef(null)
   const pictureRef = useRef(null)
   const tocTrackRef = useRef(null)
   const tocJumpLockRef = useRef(false)
@@ -68,59 +67,43 @@ export default function ArticleDetailClient({ hero, typingText, children }) {
   }, [typingText])
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const contentNode = contentRef.current
-      if (!contentNode) return
-
-      const headings = Array.from(contentNode.querySelectorAll('h1, h2, h3, h4')).filter((heading) =>
-        heading.textContent?.trim()
-      )
-
-      const nextTocItems = headings.map((heading, index) => {
-        const text = heading.textContent.trim()
-        const id = `article-heading-${index}-${text
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^\w\u4e00-\u9fa5-]/g, '')}`
-
-        heading.id = id
-
-        return {
-          id,
-          text,
-          level: Number(heading.tagName.slice(1)),
-        }
-      })
-
-      setTocItems(nextTocItems)
-      setActiveHeading(nextTocItems[0]?.id || '')
-    })
-
-    return () => window.cancelAnimationFrame(frame)
-  }, [children])
-
-  useEffect(() => {
     if (!tocItems.length) return undefined
 
-    const headings = tocItems.map((item) => document.getElementById(item.id)).filter(Boolean)
-    if (!headings.length) return undefined
+    let frame = 0
+    const syncActiveHeading = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const headings = tocItems
+          .map((item) => ({
+            id: item.id,
+            node: document.getElementById(item.id),
+          }))
+          .filter((item) => item.node)
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        if (!headings.length) return
 
-        if (visible.length) {
-          setActiveHeading((prev) => (prev === visible[0].target.id ? prev : visible[0].target.id))
+        let currentId = headings[0].id
+        for (const heading of headings) {
+          if (heading.node.getBoundingClientRect().top <= TOC_ACTIVE_OFFSET) {
+            currentId = heading.id
+          } else {
+            break
+          }
         }
-      },
-      { rootMargin: '-96px 0px -62% 0px', threshold: 0 }
-    )
 
-    headings.forEach((heading) => observer.observe(heading))
+        setActiveHeading((prev) => (prev === currentId ? prev : currentId))
+      })
+    }
 
-    return () => observer.disconnect()
+    syncActiveHeading()
+    window.addEventListener('scroll', syncActiveHeading, { passive: true })
+    window.addEventListener('resize', syncActiveHeading)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', syncActiveHeading)
+      window.removeEventListener('resize', syncActiveHeading)
+    }
   }, [tocItems])
 
   useEffect(() => {
@@ -187,7 +170,6 @@ export default function ArticleDetailClient({ hero, typingText, children }) {
   return (
     <>
       <div className={`${styles.headers} ${scrollTop > 270 ? styles.hiddenHeaders : ''}`}></div>
-
       <div className={styles.picture} ref={pictureRef}>
         {hero}
         <div className={styles.pictureTags}>
@@ -202,6 +184,7 @@ export default function ArticleDetailClient({ hero, typingText, children }) {
             </button>
           ))}
         </div>
+
         <div className={`${styles.stage} ${isPictureVisible ? '' : styles.pausedStage}`}>
           <div className={styles.runner}>
             <div className={styles.preson}></div>
@@ -226,25 +209,30 @@ export default function ArticleDetailClient({ hero, typingText, children }) {
           </div>
 
           <div className={styles.articleFrame}>
-            <article className={styles.content} data-article-content ref={contentRef}>
+            <article className={styles.content} data-article-content>
               {children}
             </article>
+            {comments}
           </div>
         </main>
 
         {tocItems.length > 0 && (
           <aside className={styles.toc}>
             <div className={styles.tocTrack} ref={tocTrackRef}>
-              {tocItems.map((item) => (
-                <a
-                  className={`${styles.tocItem} ${styles[`tocLevel${item.level}`]} ${activeHeading === item.id ? styles.activeTocItem : ''}`}
-                  href={`#${item.id}`}
-                  key={item.id}
-                  onClick={(event) => handleTocClick(event, item.id)}
-                >
-                  {item.text}
-                </a>
-              ))}
+              {tocItems.map((item) => {
+                const isActive = activeHeading === item.id
+
+                return (
+                  <a
+                    className={`${styles.tocItem} ${styles[`tocLevel${item.level}`]} ${isActive ? styles.activeTocItem : ''}`}
+                    href={`#${item.id}`}
+                    key={item.id}
+                    onClick={(event) => handleTocClick(event, item.id)}
+                  >
+                    {item.text}
+                  </a>
+                )
+              })}
             </div>
           </aside>
         )}

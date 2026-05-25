@@ -8,7 +8,7 @@
  * - slug: 文章标识符，用于生成链接路径
  * - meta: 文章分类标签（如 "JS 防抖"）
  * - title: 文章标题
- * - desc: 文章简介（超过 3 行会被截断，hover 时显示完整内容）
+ * - desc: 文章简介（超过 3 行会被截断）
  * - tags: 技术标签数组
  */
 import Link from 'next/link'
@@ -23,8 +23,8 @@ function ArticleCard({ slug, meta, title, desc, tags }) {
       <div className={styles.articleMeta}>{meta}</div>
       {/* 文章标题 */}
       <h3 className={styles.articleTitle}>{title}</h3>
-      {/* 文章简介：data-full 保存完整文本，CSS 用它做 hover 提示 */}
-      <div className={styles.articleDescWrap} data-full={desc}>
+      {/* 文章简介 */}
+      <div className={styles.articleDescWrap}>
         <p className={styles.articleDesc}>{desc}</p>
       </div>
       {/* 技术标签列表 */}

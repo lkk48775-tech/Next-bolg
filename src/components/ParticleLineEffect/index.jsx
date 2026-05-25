@@ -14,8 +14,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Particles, { initParticlesEngine } from '@tsparticles/react'
-import { loadFull } from 'tsparticles'
+import Particles from '@tsparticles/react'
+import { initTsParticlesEngine } from '@/lib/tsparticlesEngine'
 
 function ParticleLineEffect() {
   const [init, setInit] = useState(false)
@@ -24,9 +24,7 @@ function ParticleLineEffect() {
   useEffect(() => {
     let mounted = true
 
-    initParticlesEngine(async (engine) => {
-      await loadFull(engine)
-    }).then(() => {
+    initTsParticlesEngine().then(() => {
       if (mounted) setInit(true)
     })
 

@@ -107,10 +107,6 @@
   overflow-x: auto;
 }
 
-.codeSkeleton {
-  min-height: 88px;
-}
-
 .codeLine {
   display: flex;
   min-height: 22px;

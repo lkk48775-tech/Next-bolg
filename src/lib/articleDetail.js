@@ -52,3 +52,56 @@ export function normalizeArticleMdx(content = '') {
     )
     .trim()
 }
+
+export function createArticleHeadingId(text = '', index = 0) {
+  const slug = String(text)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\u4e00-\u9fa5-]/g, '')
+    .replace(/^-+|-+$/g, '')
+
+  return `article-heading-${index}-${slug || 'section'}`
+}
+
+const cleanHeadingText = (value = '') =>
+  value
+    .replace(/\s+#+\s*$/, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/[`*_~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+export function extractArticleToc(content = '') {
+  if (!content) return []
+
+  const tocItems = []
+  let fencedBlock = null
+
+  for (const line of content.split(/\r?\n/)) {
+    const trimmedLine = line.trim()
+    const fenceMatch = trimmedLine.match(/^(```|~~~)/)
+
+    if (fenceMatch) {
+      fencedBlock = fencedBlock === fenceMatch[1] ? null : fenceMatch[1]
+      continue
+    }
+
+    if (fencedBlock) continue
+
+    const headingMatch = trimmedLine.match(/^(#{1,4})\s+(.+)$/)
+    if (!headingMatch) continue
+
+    const text = cleanHeadingText(headingMatch[2])
+    if (!text) continue
+
+    tocItems.push({
+      id: createArticleHeadingId(text, tocItems.length),
+      text,
+      level: headingMatch[1].length,
+    })
+  }
+
+  return tocItems
+}

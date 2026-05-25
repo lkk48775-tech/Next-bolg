@@ -637,6 +637,45 @@
   }
 }
 
+@media (max-width: 360px) {
+  .header {
+    .headerText {
+      span {
+        width: auto;
+        border-right: 0;
+        animation: none;
+      }
+    }
+
+    .bannerWare1,
+    .bannerWare2 {
+      width: 100%;
+      background-size: cover;
+      animation: none;
+    }
+
+    .skip {
+      .icon {
+        animation: none;
+      }
+    }
+  }
+
+  .main {
+    width: calc(100% - 28px);
+
+    .right {
+      .textK {
+        .icons {
+          .icon {
+            animation: none;
+          }
+        }
+      }
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .header {
     .headerText {

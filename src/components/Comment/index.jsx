@@ -516,7 +516,7 @@ function Comment({ className = '', articleId, title = '' }) {
   )
 
   return (
-    <section className={`${styles.comment} ${className}`} id="comment">
+    <section className={`${styles.comment} ${className}`} id="comment" data-toc-exclude>
       <div className={styles.petals} aria-hidden="true"></div>
 
       <form className={styles.messageBox} onSubmit={handleSubmit}>

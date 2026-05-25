@@ -10,6 +10,7 @@
  */
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { BlogProvider, useBlogContext } from '@/context/BlogContext'
 import Header from '@/components/Header'
@@ -17,9 +18,20 @@ import Footer from '@/components/Footer'
 import EffectManager from '@/components/EffectManager'
 import styles from './BlogLayout.module.css'
 
+const TOP_BUTTON_DRAG_THRESHOLD = 10
+const TOP_BUTTON_SCROLL_GUARD_MS = 180
+
+const normalizeWheelDelta = (event) => {
+  if (event.deltaMode === 1) return event.deltaY * 16
+  if (event.deltaMode === 2) return event.deltaY * window.innerHeight
+  return event.deltaY
+}
+
 function BlogLayoutInner({ children }) {
   const pathname = usePathname()
   const { scrollTop, headerVisible, blogTheme, toggleBlogTheme, isThemeAnimating } = useBlogContext()
+  const topButtonGestureRef = useRef({ startX: 0, startY: 0, moved: false })
+  const lastScrollAtRef = useRef(0)
 
   // 随笔页自带页脚，不显示公共 Footer
   const isEssayDetail = pathname.startsWith('/Essay')
@@ -28,7 +40,48 @@ function BlogLayoutInner({ children }) {
 
   // 回到页面顶部
   const goToTop = () => {
+    const gesture = topButtonGestureRef.current
+    const justScrolled = performance.now() - lastScrollAtRef.current < TOP_BUTTON_SCROLL_GUARD_MS
+
+    if (gesture.moved || justScrolled) {
+      topButtonGestureRef.current = { startX: 0, startY: 0, moved: false }
+      return
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const startTopButtonGesture = (clientX, clientY) => {
+    topButtonGestureRef.current = { startX: clientX, startY: clientY, moved: false }
+  }
+
+  const updateTopButtonGesture = (clientX, clientY) => {
+    const gesture = topButtonGestureRef.current
+
+    if (
+      Math.abs(clientX - gesture.startX) > TOP_BUTTON_DRAG_THRESHOLD ||
+      Math.abs(clientY - gesture.startY) > TOP_BUTTON_DRAG_THRESHOLD
+    ) {
+      gesture.moved = true
+    }
+  }
+
+  useEffect(() => {
+    const markScroll = () => {
+      lastScrollAtRef.current = performance.now()
+    }
+
+    window.addEventListener('scroll', markScroll, { passive: true })
+    return () => window.removeEventListener('scroll', markScroll)
+  }, [])
+
+  const handleToolbarWheel = (event) => {
+    const deltaY = normalizeWheelDelta(event)
+
+    if (deltaY === 0) return
+
+    event.preventDefault()
+    window.scrollBy({ top: deltaY, left: event.deltaX, behavior: 'auto' })
   }
 
   // 组合布局根节点的 className：主题 + 动画状态
@@ -52,10 +105,20 @@ function BlogLayoutInner({ children }) {
         {!isEssayDetail && <Footer />}
       </div>
       {/* 右下角固定工具栏 */}
-      <div className={styles.Stickiness}>
+      <div className={styles.Stickiness} onWheel={handleToolbarWheel}>
         {/* 回到顶部按钮：滚动超过 700px 时显示 */}
         <li
           className={`iconfont icon-lvxing ${styles.icon} ${scrollTop > 700 ? styles.showIcon : styles.hiddenIcon} ${styles.icon1}`}
+          onPointerDown={(event) => startTopButtonGesture(event.clientX, event.clientY)}
+          onPointerMove={(event) => updateTopButtonGesture(event.clientX, event.clientY)}
+          onTouchStart={(event) => {
+            const touch = event.touches[0]
+            if (touch) startTopButtonGesture(touch.clientX, touch.clientY)
+          }}
+          onTouchMove={(event) => {
+            const touch = event.touches[0]
+            if (touch) updateTopButtonGesture(touch.clientX, touch.clientY)
+          }}
           onClick={goToTop}
         ></li>
         {/* 主题切换按钮 */}

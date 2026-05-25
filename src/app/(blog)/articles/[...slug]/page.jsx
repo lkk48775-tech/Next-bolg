@@ -9,7 +9,7 @@ import CommentShell from '@/components/CommentShell'
 import EssayActions from '@/components/EssayActions'
 import articleHero from '@/assets/1-lite.webp'
 import styles from './ArticleDetail.module.css'
-import { getArticleBySlug, normalizeArticleMdx } from '@/lib/articleDetail'
+import { createArticleHeadingId, extractArticleToc, getArticleBySlug, normalizeArticleMdx } from '@/lib/articleDetail'
 import { getArticleStaticParams } from '@/lib/articleStaticParams'
 
 export const revalidate = 300
@@ -18,7 +18,16 @@ export async function generateStaticParams() {
   return getArticleStaticParams()
 }
 
-const mdxComponents = {
+const getTextFromChildren = (children) => {
+  if (children === null || children === undefined) return ''
+  if (typeof children === 'string' || typeof children === 'number') return String(children)
+  if (Array.isArray(children)) return children.map(getTextFromChildren).join('')
+  if (children?.props?.children) return getTextFromChildren(children.props.children)
+
+  return ''
+}
+
+const baseMdxComponents = {
   pre: ({ children }) => {
     if (!children?.props) return <pre>{children}</pre>
 
@@ -31,6 +40,41 @@ const mdxComponents = {
   table: (props) => <table className={styles.mdxTable} {...props} />,
   th: (props) => <th {...props} />,
   td: (props) => <td {...props} />,
+}
+
+const createHeadingComponent = (level, getNextHeading) => {
+  const Tag = `h${level}`
+
+  return function ArticleHeading({ children, ...props }) {
+    const { item: nextHeading, index } = getNextHeading()
+    const text = getTextFromChildren(children)
+    const id = nextHeading?.id || createArticleHeadingId(text, index)
+
+    return (
+      <Tag {...props} id={id}>
+        {children}
+      </Tag>
+    )
+  }
+}
+
+const createMdxComponents = (tocItems) => {
+  let headingIndex = 0
+  const getNextHeading = () => {
+    const index = headingIndex
+    const item = tocItems[headingIndex]
+    headingIndex += 1
+
+    return { item, index }
+  }
+
+  return {
+    ...baseMdxComponents,
+    h1: createHeadingComponent(1, getNextHeading),
+    h2: createHeadingComponent(2, getNextHeading),
+    h3: createHeadingComponent(3, getNextHeading),
+    h4: createHeadingComponent(4, getNextHeading),
+  }
 }
 
 export default async function ArticleDetailPage({ params }) {
@@ -49,12 +93,22 @@ export default async function ArticleDetailPage({ params }) {
   }
 
   const mdxSource = normalizeArticleMdx(article.content || '')
+  const tocItems = extractArticleToc(mdxSource)
+  const mdxComponents = createMdxComponents(tocItems)
   const typingText = `${article.title}${article.summary ? `：${article.summary}` : ''}`
 
   return (
     <SessionProviderShell>
       <ArticleDetailClient
         typingText={typingText}
+        tocItems={tocItems}
+        comments={(
+          <CommentShell
+            className={styles.articleComment}
+            articleId={article.id}
+            title={article.title}
+          />
+        )}
         hero={(
           <>
             <Image
@@ -86,6 +140,7 @@ export default async function ArticleDetailPage({ params }) {
           </>
         )}
       >
+  
         {mdxSource ? (
           <MDXRemote
             source={mdxSource}
@@ -98,11 +153,6 @@ export default async function ArticleDetailPage({ params }) {
           </div>
         )}
 
-        <CommentShell
-          className={styles.articleComment}
-          articleId={article.id}
-          title={article.title}
-        />
       </ArticleDetailClient>
     </SessionProviderShell>
   )
