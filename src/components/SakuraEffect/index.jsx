@@ -60,7 +60,7 @@ function SakuraEffect() {
   }, [])
 
   const options = useMemo(() => ({
-    fullScreen: { enable: true, zIndex: 9999 },
+    fullScreen: { enable: true, zIndex: 10002 },
     background: { color: { value: 'transparent' } },
     fpsLimit: isTinyScreen ? 20 : isLowPowerMode ? 30 : 60,
     particles: {

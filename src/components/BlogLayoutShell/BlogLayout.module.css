@@ -356,11 +356,6 @@
   width: 50px;
   min-height: 150px;
   padding: 8px 0;
-  border: 1px solid var(--blog-toolbar-border);
-  border-radius: 999px;
-  background: var(--blog-toolbar-bg);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, .12);
-  backdrop-filter: blur(12px);
   pointer-events: none;
   .icon {
     display: flex;
@@ -382,7 +377,7 @@
       visibility .25s;
   }
   .icon:hover {
-    background: var(--blog-toolbar-hover-bg);
+    background: transparent;
   }
   .icon1:hover {
     transform: translateY(-10px);

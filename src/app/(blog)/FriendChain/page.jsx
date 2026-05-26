@@ -1,11 +1,11 @@
 /**
  * 友链页面（Server Component）
- * 
+ *
  * 纯服务端渲染，零客户端 JS。
  * 展示友情链接列表、交换说明和本站信息。
- * 顶部有固定的半透明遮罩条。
  */
 import styles from './FriendChain.module.css'
+import HeaderBackdrop from '@/components/HeaderBackdrop'
 
 const friendLinks = [
   {
@@ -34,13 +34,13 @@ const siteInfo = [
 export default function FriendChainPage() {
   return (
     <>
-      <div className={styles.headers}></div>
+      <HeaderBackdrop />
       <main className={styles.page}>
         <section className={styles.hero}>
-          <div>
+          <div className={styles.heroContent}>
             <span className={styles.eyebrow}>Friends</span>
             <h1>友链</h1>
-            <p>一些认真生活、认真写作的人。欢迎常来看看，也欢迎交换链接。</p>
+            <p>一些认真生活、认真写作的人。这里收藏值得常去看看的站点，也欢迎交换链接。</p>
           </div>
           <a className={styles.applyButton} href="#apply">申请友链</a>
         </section>

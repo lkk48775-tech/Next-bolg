@@ -13,8 +13,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useBlogContext } from '@/context/BlogContext'
 import HoverPrefetchLink from '@/components/HoverPrefetchLink'
+import HeaderBackdrop from '@/components/HeaderBackdrop'
 import axios from 'axios'
 import styles from '@/app/(blog)/search/search.module.css'
 
@@ -22,7 +22,6 @@ import styles from '@/app/(blog)/search/search.module.css'
 const PAGE_SIZE = 6
 
 export default function SearchClient({ initialKeyword = '', initialArticles = [] }) {
-  const { scrollTop = 0 } = useBlogContext()
   const router = useRouter()
   const searchParams = useSearchParams()
   const resultShellRef = useRef(null)
@@ -134,7 +133,7 @@ export default function SearchClient({ initialKeyword = '', initialArticles = []
   return (
     <>
       {/* 顶部遮罩条 */}
-      <div className={`${styles.headers} ${scrollTop > 270 ? styles.hiddenHeaders : ''}`}></div>
+      <HeaderBackdrop />
       <main className={styles.page}>
         {/* 搜索面板：标题 + 输入框 + 热门标签 */}
         <section className={styles.searchPanel}>

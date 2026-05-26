@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.65",
+    "@ai-sdk/react": "^3.0.193",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/mdx": "^3.1.0",
     "@mdx-js/react": "^3.1.1",
@@ -17,6 +19,7 @@
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/shape-image": "^3.9.1",
     "@tsparticles/slim": "^3.9.1",
+    "ai": "^6.0.191",
     "autoprefixer": "^10.5.0",
     "axios": "^1.16.0",
     "chart.js": "^4.5.1",
@@ -25,12 +28,14 @@
     "next": "15.3.2",
     "next-auth": "^4.24.14",
     "next-mdx-remote": "^6.0.0",
+    "openai": "^6.39.0",
     "postcss": "^8.5.14",
-    "react": "19.1.0",
+    "react": "^19.1.2",
     "react-chartjs-2": "^5.3.1",
-    "react-dom": "19.1.0",
+    "react-dom": "^19.1.2",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.3.0",
     "tsparticles": "^3.9.1"
   },
@@ -42,6 +47,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "postcss-nested": "^7.0.2",
-    "postcss-nesting": "^14.0.0"
+    "postcss-nesting": "^14.0.0",
+    "typescript": "6.0.3"
   }
 }

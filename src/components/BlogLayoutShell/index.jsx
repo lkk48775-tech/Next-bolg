@@ -35,9 +35,6 @@ function BlogLayoutInner({ children }) {
 
   // 随笔页自带页脚，不显示公共 Footer
   const isEssayDetail = pathname.startsWith('/Essay')
-  // 归档页有自己的导航，不显示公共 Header
-  const isArchivePage = pathname === '/TechnicalRoute'
-
   // 回到页面顶部
   const goToTop = () => {
     const gesture = topButtonGestureRef.current
@@ -97,8 +94,8 @@ function BlogLayoutInner({ children }) {
       {/* 页面特效：根据路径显示不同的粒子/樱花效果 */}
       <EffectManager />
       <div className={styles.img}>
-        {/* 非归档页显示顶部导航栏 */}
-        {!isArchivePage && <Header scrollTop={scrollTop} isVisible={headerVisible} />}
+        {/* 显示顶部导航栏 */}
+        <Header scrollTop={scrollTop} isVisible={headerVisible} />
         {/* 渲染子页面内容 */}
         {children}
         {/* 非随笔页显示公共页脚 */}

@@ -10,7 +10,13 @@
  * - 提供滚动状态给子页面
  */
 import BlogLayoutShell from '@/components/BlogLayoutShell'
+import AiDrawerTrigger from '@/components/ai/AiDrawerTrigger'
 
 export default function BlogLayout({ children }) {
-  return <BlogLayoutShell>{children}</BlogLayoutShell>
+  return (
+    <BlogLayoutShell>
+      {children}
+      <AiDrawerTrigger />
+    </BlogLayoutShell>
+  )
 }
