@@ -53,7 +53,15 @@ export async function POST(req: Request) {
   // 未登录用户不读写长期上下文；登录用户使用数据库里的压缩记忆。
   const currentUser = await getCurrentDbUser();
   const userId = currentUser?.id ? String(currentUser.id) : undefined;
-  const storedContext = userId ? await loadAiContext({ userId }) : null;
+  let storedContext = null;
+
+  if (userId) {
+    try {
+      storedContext = await loadAiContext({ userId });
+    } catch (error) {
+      console.error("Failed to load AI context:", error);
+    }
+  }
   const modelMessages = await convertToModelMessages(messages);
   const toolInstructionMessages = [
     {
